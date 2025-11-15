@@ -20,7 +20,7 @@ export class ApiError extends Error {
   }
 }
 
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
   const url = `${API_BASE}${endpoint}`
 
   try {
@@ -42,7 +42,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
       )
     }
 
-    return data.data as T
+    return data
   } catch (error) {
     if (error instanceof ApiError) {
       throw error
@@ -58,7 +58,20 @@ export const apiClient = {
   // Health check
   health: () => fetch(`${API_URL}/health`).then((res) => res.json()),
 
-  // Meetings
+  // Meetings - simple methods for compatibility
+  getMeetings: (params?: {
+    fromDate?: string
+    toDate?: string
+    companyId?: string
+    status?: string
+    limit?: number
+  }) => {
+    const query = params ? new URLSearchParams(params as Record<string, string>) : ''
+    return fetchApi(`/meetings${query ? `?${query}` : ''}`)
+  },
+  getMeeting: (id: string) => fetchApi(`/meetings/${id}`),
+
+  // Meetings - organized methods
   meetings: {
     list: (params?: {
       fromDate?: string

@@ -3,10 +3,10 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { getAirtableClient } from 'airtable-client'
-import { asyncHandler } from '../middleware/errorHandler'
-import { cacheGet, cacheSet } from '../utils/redis'
-import { CACHE } from 'shared/constants'
+import { getAirtableClient } from '../lib/client.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
+import { cacheGet, cacheSet } from '../utils/redis.js'
+import { CACHE } from '../shared/constants.js'
 
 const router = Router()
 

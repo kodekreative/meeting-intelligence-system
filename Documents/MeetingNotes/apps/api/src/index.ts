@@ -9,23 +9,24 @@ import helmet from 'helmet'
 import compression from 'compression'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
-import { logger } from './utils/logger'
-import { errorHandler } from './middleware/errorHandler'
-import { requestLogger } from './middleware/requestLogger'
-import { initializeAirtable } from 'airtable-client'
-import { initializeRedis } from './utils/redis'
+import { logger } from './utils/logger.js'
+import { errorHandler } from './middleware/errorHandler.js'
+import { requestLogger } from './middleware/requestLogger.js'
+import { initializeAirtable } from './lib/client.js'
+import { initializeRedis } from './utils/redis.js'
 
 // Import routes
-import healthRouter from './routes/health'
-import authRouter from './routes/auth'
-import meetingsRouter from './routes/meetings'
-import companiesRouter from './routes/companies'
-import contactsRouter from './routes/contacts'
-import actionItemsRouter from './routes/actionItems'
-import dashboardRouter from './routes/dashboard'
+import healthRouter from './routes/health.js'
+import authRouter from './routes/auth.js'
+import meetingsRouter from './routes/meetings.js'
+import companiesRouter from './routes/companies.js'
+import contactsRouter from './routes/contacts.js'
+import actionItemsRouter from './routes/actionItems.js'
+import dashboardRouter from './routes/dashboard.js'
+import emailRouter from './routes/email.routes.js'
 
-// Load environment variables
-dotenv.config()
+// Load environment variables from root
+dotenv.config({ path: '../../.env' })
 
 const app: Express = express()
 const PORT = process.env.PORT || 3001
@@ -36,16 +37,17 @@ const NODE_ENV = process.env.NODE_ENV || 'development'
  */
 async function initializeServices(): Promise<void> {
   try {
-    // Initialize Airtable
-    if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
-      throw new Error('Missing required Airtable credentials')
+    // Initialize Airtable (optional for development)
+    if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID &&
+        !process.env.AIRTABLE_API_KEY.includes('placeholder')) {
+      initializeAirtable({
+        apiKey: process.env.AIRTABLE_API_KEY,
+        baseId: process.env.AIRTABLE_BASE_ID,
+      })
+      logger.info('✓ Airtable client initialized')
+    } else {
+      logger.warn('⚠ Airtable credentials not configured - running in demo mode')
     }
-
-    initializeAirtable({
-      apiKey: process.env.AIRTABLE_API_KEY,
-      baseId: process.env.AIRTABLE_BASE_ID,
-    })
-    logger.info('✓ Airtable client initialized')
 
     // Initialize Redis
     await initializeRedis({
@@ -103,6 +105,7 @@ function configureRoutes(app: Express): void {
   app.use(`${API_PREFIX}/contacts`, contactsRouter)
   app.use(`${API_PREFIX}/action-items`, actionItemsRouter)
   app.use(`${API_PREFIX}/dashboard`, dashboardRouter)
+  app.use(`${API_PREFIX}/email`, emailRouter)
 
   // 404 handler
   app.use('*', (req, res) => {

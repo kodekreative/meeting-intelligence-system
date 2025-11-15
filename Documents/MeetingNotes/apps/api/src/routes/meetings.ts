@@ -3,10 +3,10 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { getAirtableClient } from 'airtable-client'
-import { asyncHandler, AppError } from '../middleware/errorHandler'
-import { cacheGet, cacheSet } from '../utils/redis'
-import { CACHE } from 'shared/constants'
+import { getAirtableClient } from '../lib/client.js'
+import { asyncHandler, AppError } from '../middleware/errorHandler.js'
+import { cacheGet, cacheSet } from '../utils/redis.js'
+import { CACHE } from '../shared/constants.js'
 
 const router = Router()
 
@@ -46,16 +46,24 @@ router.get(
     // Transform to API response format
     const transformedMeetings = meetings.map((meeting) => ({
       id: meeting.id,
-      meetingDate: meeting.fields['Meeting Date'],
-      title: meeting.fields.Name,
+      startTime: meeting.fields['Start Time'],
+      title: meeting.fields.Title || meeting.fields.Name,
       participants: meeting.fields.Participants?.split(',').map((p) => p.trim()) || [],
-      companyId: meeting.fields.Company?.[0],
-      summary: meeting.fields.Summary,
-      topics: meeting.fields.Topics || [],
-      keyQuestions: meeting.fields['Key Questions'] || [],
+      ownerName: meeting.fields['Owner Name'],
+      ownerEmail: meeting.fields['Owner Email'],
+      sessionId: meeting.fields['Session ID'],
+      summary: meeting.fields['Meeting Summary'],
+      topics: Array.isArray(meeting.fields.Topics)
+        ? meeting.fields.Topics.join(', ')
+        : (typeof meeting.fields.Topics === 'string' ? meeting.fields.Topics : ''),
+      keyQuestions: Array.isArray(meeting.fields['Key Questions'])
+        ? meeting.fields['Key Questions'].join(', ')
+        : (typeof meeting.fields['Key Questions'] === 'string' ? meeting.fields['Key Questions'] : ''),
+      actionItems: meeting.fields['Action Items'],
       reportUrl: meeting.fields['Report URL'],
-      processingStatus: meeting.fields['Processing Status'],
-      processedAt: meeting.fields['Processed At'],
+      chapterSummaries: meeting.fields['Chapter Summaries'],
+      transcriptSpeakers: meeting.fields['Transcript Speakers'],
+      speakerBlocks: meeting.fields['Speaker Blocks'],
     }))
 
     // Cache the result
@@ -104,17 +112,24 @@ router.get(
     // Transform to API response format
     const transformedMeeting = {
       id: meeting.id,
-      meetingDate: meeting.fields['Meeting Date'],
-      title: meeting.fields.Name,
+      startTime: meeting.fields['Start Time'],
+      title: meeting.fields.Title || meeting.fields.Name,
       participants: meeting.fields.Participants?.split(',').map((p) => p.trim()) || [],
-      companyId: meeting.fields.Company?.[0],
-      summary: meeting.fields.Summary,
-      transcript: meeting.fields.Transcript,
-      topics: meeting.fields.Topics || [],
-      keyQuestions: meeting.fields['Key Questions'] || [],
+      ownerName: meeting.fields['Owner Name'],
+      ownerEmail: meeting.fields['Owner Email'],
+      sessionId: meeting.fields['Session ID'],
+      summary: meeting.fields['Meeting Summary'],
+      topics: Array.isArray(meeting.fields.Topics)
+        ? meeting.fields.Topics.join(', ')
+        : (typeof meeting.fields.Topics === 'string' ? meeting.fields.Topics : ''),
+      keyQuestions: Array.isArray(meeting.fields['Key Questions'])
+        ? meeting.fields['Key Questions'].join(', ')
+        : (typeof meeting.fields['Key Questions'] === 'string' ? meeting.fields['Key Questions'] : ''),
+      actionItems: meeting.fields['Action Items'],
       reportUrl: meeting.fields['Report URL'],
-      processingStatus: meeting.fields['Processing Status'],
-      processedAt: meeting.fields['Processed At'],
+      chapterSummaries: meeting.fields['Chapter Summaries'],
+      transcriptSpeakers: meeting.fields['Transcript Speakers'],
+      speakerBlocks: meeting.fields['Speaker Blocks'],
     }
 
     // Cache the result
@@ -147,13 +162,16 @@ router.get(
 
     const transformedMeetings = meetings.map((meeting) => ({
       id: meeting.id,
-      meetingDate: meeting.fields['Meeting Date'],
-      title: meeting.fields.Name,
+      startTime: meeting.fields['Start Time'],
+      title: meeting.fields.Title || meeting.fields.Name,
       participants: meeting.fields.Participants?.split(',').map((p) => p.trim()) || [],
-      companyId: meeting.fields.Company?.[0],
-      summary: meeting.fields.Summary,
-      topics: meeting.fields.Topics || [],
-      processingStatus: meeting.fields['Processing Status'],
+      ownerName: meeting.fields['Owner Name'],
+      ownerEmail: meeting.fields['Owner Email'],
+      summary: meeting.fields['Meeting Summary'],
+      topics: Array.isArray(meeting.fields.Topics)
+        ? meeting.fields.Topics.join(', ')
+        : (typeof meeting.fields.Topics === 'string' ? meeting.fields.Topics : ''),
+      reportUrl: meeting.fields['Report URL'],
     }))
 
     res.json({

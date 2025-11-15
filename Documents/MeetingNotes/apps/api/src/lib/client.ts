@@ -58,13 +58,14 @@ export class AirtableClient {
     let lastError: Error | undefined
     for (let attempt = 0; attempt < this.maxRetries; attempt++) {
       try {
+        const selectOptions: any = {}
+        if (options?.filterByFormula) selectOptions.filterByFormula = options.filterByFormula
+        if (options?.sort) selectOptions.sort = options.sort
+        if (options?.maxRecords) selectOptions.maxRecords = options.maxRecords
+        if (options?.view) selectOptions.view = options.view
+
         const records = await this.base(tableName)
-          .select({
-            filterByFormula: options?.filterByFormula,
-            sort: options?.sort,
-            maxRecords: options?.maxRecords,
-            view: options?.view,
-          })
+          .select(selectOptions)
           .all()
 
         return records as unknown as Records<T>
@@ -87,24 +88,16 @@ export class AirtableClient {
   async getMeetings(options?: {
     fromDate?: Date
     toDate?: Date
-    companyId?: string
-    processingStatus?: string
     maxRecords?: number
   }): Promise<MeetingRecord[]> {
     let filterFormula = ''
     const filters: string[] = []
 
     if (options?.fromDate) {
-      filters.push(`IS_AFTER({Meeting Date}, '${options.fromDate.toISOString()}')`)
+      filters.push(`IS_AFTER({Start Time}, '${options.fromDate.toISOString()}')`)
     }
     if (options?.toDate) {
-      filters.push(`IS_BEFORE({Meeting Date}, '${options.toDate.toISOString()}')`)
-    }
-    if (options?.companyId) {
-      filters.push(`FIND('${options.companyId}', {Company})`)
-    }
-    if (options?.processingStatus) {
-      filters.push(`{Processing Status} = '${options.processingStatus}'`)
+      filters.push(`IS_BEFORE({Start Time}, '${options.toDate.toISOString()}')`)
     }
 
     if (filters.length > 0) {
@@ -113,7 +106,7 @@ export class AirtableClient {
 
     const records = await this.fetchWithRetry<MeetingRecord['fields']>(AIRTABLE_TABLES.MEETINGS, {
       filterByFormula: filterFormula || undefined,
-      sort: [{ field: 'Meeting Date', direction: 'desc' }],
+      sort: [{ field: 'Start Time', direction: 'desc' }],
       maxRecords: options?.maxRecords,
     })
 

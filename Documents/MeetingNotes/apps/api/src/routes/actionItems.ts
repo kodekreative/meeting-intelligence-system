@@ -3,11 +3,11 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { getAirtableClient } from 'airtable-client'
-import { asyncHandler, AppError } from '../middleware/errorHandler'
-import { cacheGet, cacheSet, cacheDelete } from '../utils/redis'
-import { CACHE } from 'shared/constants'
-import { updateActionItemSchema } from 'shared/schemas'
+import { getAirtableClient } from '../lib/client.js'
+import { asyncHandler, AppError } from '../middleware/errorHandler.js'
+import { cacheGet, cacheSet, cacheDelete } from '../utils/redis.js'
+import { CACHE } from '../shared/constants.js'
+import { updateActionItemSchema } from '../shared/schemas.js'
 
 const router = Router()
 

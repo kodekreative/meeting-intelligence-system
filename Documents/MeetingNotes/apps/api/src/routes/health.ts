@@ -3,8 +3,8 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { getRedisClient } from '../utils/redis'
-import { getAirtableClient } from 'airtable-client'
+import { getRedisClient } from '../utils/redis.js'
+import { getAirtableClient } from '../lib/client.js'
 
 const router = Router()
 

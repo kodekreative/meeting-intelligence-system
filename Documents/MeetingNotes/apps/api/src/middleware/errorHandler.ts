@@ -3,7 +3,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { logger } from '../utils/logger'
+import { logger } from '../utils/logger.js'
 import { ZodError } from 'zod'
 
 export class AppError extends Error {

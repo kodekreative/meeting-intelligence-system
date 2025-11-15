@@ -5,10 +5,6 @@
   "description": "Meeting Intelligence System - Transform meeting transcripts into actionable intelligence",
   "author": "Pine Lake Capital & Conversely AI",
   "license": "UNLICENSED",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -18,7 +14,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky install"
+    "prepare": "cd $(git rev-parse --show-toplevel)/Documents/MeetingNotes && husky install || true"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
