@@ -1,0 +1,477 @@
+Meeting Intelligence System
+Technical Design Document
+Pine Lake Capital & Conversely AI
+Version 1.0 | November 2025
+1. System Architecture Overview
+The Meeting Intelligence System employs a modern, event-driven microservices architecture with AI processing pipelines, dual data stores, and real-time synchronization. The system is designed for reliability, scalability, and extensibility as it grows from single-user to multi-tenant deployment.
+1.1 Architecture Principles
+	•	Separation of Concerns: Clear boundaries between data ingestion, AI processing, and user-facing services
+	•	Event-Driven: Asynchronous processing with message queues for scalability and fault tolerance
+	•	Dual Data Strategy: Airtable as source of truth, PostgreSQL for operational queries and relationships
+	•	API-First Design: All functionality exposed via REST APIs for future mobile and integration support
+	•	Idempotency: All operations designed to be safely retryable
+1.2 System Components
+Component
+Technology
+Responsibility
+API Gateway
+FastAPI + Nginx
+Request routing, authentication, rate limiting
+Web Application
+React + Tailwind CSS
+User interface for all views and interactions
+Calendar Service
+Python + Microsoft Graph API
+Sync calendars, create Airtable placeholder meetings
+AI Processing Pipeline
+Python + OpenAI API + Celery
+Extract action items, personal intelligence, business issues
+Email Service
+Python + Microsoft Graph API
+Generate and send daily digest emails at 6 AM
+Data Sync Service
+Python + Airtable API
+Bidirectional sync between Airtable and PostgreSQL
+PostgreSQL Database
+PostgreSQL 15
+Operational database for fast queries, relationships
+Redis Cache
+Redis 7
+Caching, session storage, message queue backing
+Message Queue
+Celery + Redis
+Async task processing for AI and email operations
+
+2. Technology Stack
+2.1 Backend Technologies
+Python 3.11
+	•	Primary backend language for all services
+	•	Strong AI/ML library ecosystem for OpenAI integration
+	•	Excellent async support for high concurrency operations
+FastAPI 0.104
+	•	Modern, fast web framework with automatic OpenAPI documentation
+	•	Built-in Pydantic for request/response validation
+	•	Native async/await support for non-blocking I/O
+SQLAlchemy 2.0
+	•	ORM for PostgreSQL database interactions
+	•	Type-safe queries with modern async support
+	•	Migration management via Alembic
+2.2 Frontend Technologies
+React 18
+	•	Component-based UI framework with hooks for state management
+	•	React Query for server state synchronization
+	•	React Router v6 for navigation
+Tailwind CSS 3.3
+	•	Utility-first CSS framework for rapid, consistent UI development
+	•	Shadcn/ui component library for polished, accessible components
+	•	Responsive by default with mobile-first approach
+TypeScript 5.2
+	•	Type safety for frontend codebase
+	•	Auto-generated types from OpenAPI spec
+2.3 Data & Integration Layer
+PostgreSQL 15
+	•	Primary operational database with full-text search
+	•	JSON/JSONB support for flexible schema evolution
+	•	Advanced indexing for fast relationship queries
+Airtable API
+	•	Source of truth for meeting transcriptions
+	•	Webhook support for real-time sync triggers
+	•	pyairtable Python library for API interactions
+Microsoft Graph API
+	•	Calendar sync across multiple Outlook calendars
+	•	Email sending via user's Outlook account
+	•	OAuth 2.0 authentication flow
+Read.ai API
+	•	Optional integration for full transcript retrieval
+	•	Fallback to Airtable Speaker Blocks field if API unavailable
+2.4 AI & Machine Learning
+OpenAI API (GPT-4)
+	•	Primary LLM for extraction tasks
+	•	Structured output mode for JSON responses
+	•	Function calling for precise entity extraction
+LangChain 0.1
+	•	Orchestration framework for multi-step AI workflows
+	•	Prompt templates for consistent extraction patterns
+	•	Chain-of-thought reasoning for complex analysis
+2.5 Infrastructure & DevOps
+Docker & Docker Compose
+	•	Containerized deployment for consistency and portability
+	•	Multi-stage builds for optimized image sizes
+Celery 5.3
+	•	Distributed task queue for async processing
+	•	Scheduled tasks via Celery Beat for daily emails
+	•	Redis as message broker and result backend
+Nginx
+	•	Reverse proxy and load balancer
+	•	SSL/TLS termination
+	•	Static asset serving for React app
+3. Database Schema Design
+PostgreSQL serves as the operational database optimized for fast queries and complex relationships. All tables include standard audit fields: created_at, updated_at, created_by, updated_by. Primary keys use UUID v4 for distributed compatibility.
+3.1 Core Tables
+users
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  timezone VARCHAR(50) DEFAULT 'America/New_York',
+  is_active BOOLEAN DEFAULT true,
+  outlook_access_token TEXT,
+  outlook_refresh_token TEXT,
+  outlook_token_expires_at TIMESTAMP,
+  email_preferences JSONB DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+companies
+CREATE TABLE companies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  company_type VARCHAR(50),
+  relationship_status VARCHAR(50),
+  industry VARCHAR(100),
+  owner_id UUID REFERENCES users(id),
+  airtable_id VARCHAR(50) UNIQUE,
+  first_meeting_date DATE,
+  last_meeting_date DATE,
+  meeting_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+contacts
+CREATE TABLE contacts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  company_id UUID REFERENCES companies(id),
+  role_title VARCHAR(255),
+  first_met_date DATE,
+  last_contact_date DATE,
+  meeting_count INTEGER DEFAULT 0,
+  relationship_score NUMERIC(3,2),
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now(),
+  UNIQUE(email, company_id)
+);
+meetings
+CREATE TABLE meetings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  airtable_record_id VARCHAR(50) UNIQUE NOT NULL,
+  calendar_event_id VARCHAR(255),
+  meeting_date TIMESTAMP NOT NULL,
+  company_id UUID REFERENCES companies(id),
+  owner_id UUID REFERENCES users(id),
+  summary TEXT,
+  full_transcript TEXT,
+  topics TEXT[],
+  key_questions TEXT[],
+  read_ai_url VARCHAR(500),
+  processing_status VARCHAR(50) DEFAULT 'pending',
+  processed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+meeting_participants
+CREATE TABLE meeting_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+  contact_id UUID REFERENCES contacts(id),
+  attendance_status VARCHAR(50) DEFAULT 'attended',
+  created_at TIMESTAMP DEFAULT now(),
+  UNIQUE(meeting_id, contact_id)
+);
+action_items
+CREATE TABLE action_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  airtable_record_id VARCHAR(50) UNIQUE,
+  meeting_id UUID REFERENCES meetings(id),
+  assignee_id UUID REFERENCES contacts(id),
+  task_description TEXT NOT NULL,
+  due_date DATE,
+  status VARCHAR(50) DEFAULT 'open',
+  priority VARCHAR(50) DEFAULT 'medium',
+  completed_at TIMESTAMP,
+  last_followed_up_at TIMESTAMP,
+  extraction_confidence NUMERIC(3,2),
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+personal_intelligence
+CREATE TABLE personal_intelligence (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  airtable_record_id VARCHAR(50) UNIQUE,
+  contact_id UUID REFERENCES contacts(id),
+  meeting_id UUID REFERENCES meetings(id),
+  detail_description TEXT NOT NULL,
+  category VARCHAR(50),
+  reminder_date DATE,
+  status VARCHAR(50) DEFAULT 'pending',
+  used_at TIMESTAMP,
+  extraction_confidence NUMERIC(3,2),
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+business_issues
+CREATE TABLE business_issues (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  airtable_record_id VARCHAR(50) UNIQUE,
+  company_id UUID REFERENCES companies(id),
+  meeting_id UUID REFERENCES meetings(id),
+  issue_description TEXT NOT NULL,
+  category VARCHAR(50),
+  severity VARCHAR(50) DEFAULT 'medium',
+  status VARCHAR(50) DEFAULT 'active',
+  resolved_at TIMESTAMP,
+  extraction_confidence NUMERIC(3,2),
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+3.2 Key Indexes
+CREATE INDEX idx_meetings_date ON meetings(meeting_date DESC);
+CREATE INDEX idx_meetings_company ON meetings(company_id, meeting_date DESC);
+CREATE INDEX idx_action_items_assignee_status ON action_items(assignee_id, status, due_date);
+CREATE INDEX idx_action_items_meeting ON action_items(meeting_id);
+CREATE INDEX idx_personal_intel_contact ON personal_intelligence(contact_id, reminder_date);
+CREATE INDEX idx_business_issues_company ON business_issues(company_id, status);
+CREATE INDEX idx_contacts_company ON contacts(company_id);
+4. API Design
+RESTful API design following OpenAPI 3.0 specification. All endpoints return JSON with consistent error handling. Authentication via JWT tokens with refresh token rotation.
+4.1 Authentication Endpoints
+POST /auth/login
+	•	Initiates OAuth 2.0 flow with Microsoft
+	•	Returns: authorization URL for user to grant permissions
+POST /auth/callback
+	•	Processes OAuth callback with authorization code
+	•	Returns: JWT access token and refresh token
+POST /auth/refresh
+	•	Exchanges refresh token for new access token
+	•	Implements token rotation for security
+4.2 Meeting Endpoints
+GET /meetings
+	•	Query params: start_date, end_date, company_id, limit, offset
+	•	Returns: paginated list of meetings with summaries
+GET /meetings/{meeting_id}
+	•	Returns: full meeting details including transcript, participants, extracted data
+	•	Includes: related action items, personal intelligence, business issues
+GET /meetings/today
+	•	Returns: today's meetings with preparation context
+	•	Includes: historical context from past meetings with same company/participants
+POST /meetings/{meeting_id}/reprocess
+	•	Triggers AI re-extraction for meeting
+	•	Returns: job ID for tracking processing status
+4.3 Company Endpoints
+GET /companies
+	•	Query params: company_type, relationship_status, sort_by
+	•	Returns: list of companies with meeting counts and recency
+GET /companies/{company_id}
+	•	Returns: company details with meeting timeline
+	•	Includes: key participants, active issues, pending action items
+GET /companies/{company_id}/summary
+	•	Returns: AI-generated company summary based on meeting history
+	•	Cached for 24 hours, regenerated on request
+4.4 Action Item Endpoints
+GET /action-items
+	•	Query params: assignee_id, status, due_date, company_id
+	•	Returns: filtered list of action items
+GET /action-items/my-tasks
+	•	Returns: current user's action items grouped by due date
+	•	Includes: overdue, due today, due this week, future
+GET /action-items/follow-ups
+	•	Returns: tasks assigned to others requiring follow-up
+	•	Logic: In Progress > 7 days OR approaching due date with no update
+PATCH /action-items/{item_id}
+	•	Updates: status, due_date, priority, assignee
+	•	Syncs updates back to Airtable
+POST /action-items/{item_id}/send-reminder
+	•	Sends email reminder to assignee
+	•	Updates last_followed_up_at timestamp
+4.5 Personal Intelligence Endpoints
+GET /personal-intelligence
+	•	Query params: contact_id, category, status, reminder_date
+	•	Returns: filtered personal intelligence notes
+GET /personal-intelligence/today
+	•	Returns: personal follow-ups scheduled for today
+	•	Grouped by category with suggested follow-up language
+PATCH /personal-intelligence/{id}
+	•	Updates: status, reminder_date
+	•	Mark as used when referenced in conversation
+4.6 Dashboard Endpoints
+GET /dashboard/today
+	•	Returns: comprehensive today's dashboard data
+	•	Includes: meetings, my tasks, follow-ups, issues, personal intel
+GET /dashboard/analytics
+	•	Returns: metrics and trends
+	•	Includes: meeting frequency, task completion rates, relationship scores
+5. AI Processing Pipeline
+The AI pipeline processes meeting transcripts to extract structured data. Processing is triggered automatically when new meetings are added to Airtable or can be manually initiated via API.
+5.1 Pipeline Stages
+Stage 1: Transcript Retrieval
+	•	Fetch meeting record from Airtable
+	•	Check for full transcript in Speaker Blocks field
+	•	If empty, attempt Read.ai API retrieval using Report URL
+	•	Fall back to Meeting Summary field if no transcript available
+Stage 2: Company and Contact Resolution
+	•	Parse participant names and emails from Name field
+	•	Match to existing contacts or create new records
+	•	Infer company from email domains and Topics field
+	•	Link meeting to company or prompt for manual assignment
+Stage 3: Action Item Extraction
+	•	First pass: Extract action items from Action Items field if populated
+	•	Second pass: Analyze full transcript for additional commitments
+	•	For each action item, extract: assignee name, task description, contextual due date
+	•	Match assignee to contact records
+	•	Parse due dates or default to Friday of current week
+	•	Assign confidence score based on clarity of commitment
+Stage 4: Personal Intelligence Extraction
+	•	Scan transcript for personal details in predefined categories
+	•	Categories: Family, Health, Hobbies, Career, Travel
+	•	Extract detail description and link to contact
+	•	Infer appropriate reminder date based on event type
+	•	Example: Son's graduation in May, reminder set for week before
+Stage 5: Business Issue Identification
+	•	Identify issues based on keywords: risk, concern, blocker, problem, challenge
+	•	Classify by category: Financial, Operational, Strategic, Personnel, Compliance
+	•	Assess severity: Low, Medium, High, Critical
+	•	Link to related action items if resolution steps discussed
+	•	Create business issue record linked to company and meeting
+Stage 6: Write Back to Airtable
+	•	Create records in Action Items, Personal Intelligence, Business Issues tables
+	•	Link new records to source meeting
+	•	Update meeting processing status to complete
+	•	Sync to PostgreSQL for fast querying
+5.2 Prompt Engineering Strategy
+Action Item Extraction Prompt:
+You are an expert at analyzing meeting transcripts to identify action items and commitments. For each commitment, extract: the person responsible, the specific task, and any mentioned deadline. If no deadline is explicitly stated, leave it blank. Be conservative: only extract items where there is a clear commitment from a specific person.
+Personal Intelligence Extraction Prompt:
+You are analyzing a business conversation to identify personal details that could be used to strengthen relationships. Extract mentions of: family events, hobbies, health situations, career milestones, travel plans. For each detail, identify the person it relates to and suggest an appropriate follow-up timing. Be respectful and only extract details that were shared voluntarily in conversation.
+Business Issue Identification Prompt:
+Analyze this meeting transcript to identify business issues, concerns, or risks discussed. For each issue: describe the problem clearly, categorize it, assess severity, and note any proposed resolution steps. Focus on substantive business challenges, not minor operational details.
+5.3 Error Handling and Retry Logic
+	•	API rate limit errors: Exponential backoff with max 3 retries
+	•	Parsing errors: Log failed extraction, mark for manual review
+	•	Network errors: Queue for retry with dead letter queue after 5 attempts
+	•	Confidence threshold: Only save extracted items with confidence > 0.7
+6. Email System
+6.1 Daily Email Scheduler
+	•	Celery Beat task scheduled for 6:00 AM user timezone daily
+	•	Generates five separate emails in parallel
+	•	Each email rendered from HTML template with user data
+	•	Emails sent via Microsoft Graph API using user's Outlook account
+	•	Delivery confirmation logged for monitoring
+6.2 Email Templates
+All email templates use responsive HTML design with:
+	•	Mobile-first layout with max-width constraints
+	•	Company branding with logo and color scheme
+	•	Clear hierarchy with headers and sections
+	•	Action buttons linking to web UI
+	•	Plain text fallback for email clients without HTML support
+7. Calendar Integration
+7.1 Multi-Calendar Sync
+	•	User authenticates via Microsoft OAuth granting calendar read permissions
+	•	System retrieves list of available calendars via Graph API
+	•	User selects which calendars to sync via settings interface
+	•	Selected calendar IDs stored in user preferences
+	•	Scheduled task polls each calendar hourly for new events
+7.2 Meeting Record Creation
+	•	When new calendar event detected, extract: title, date/time, attendees, location
+	•	Create placeholder meeting record in Airtable with calendar event ID
+	•	Set processing status to pending transcription
+	•	When Read.ai processes meeting, existing Airtable record updated with transcript
+	•	This links calendar events to meeting transcripts
+8. Security & Authentication
+8.1 Authentication Flow
+	•	OAuth 2.0 Authorization Code flow with PKCE for Microsoft Graph
+	•	Tokens encrypted at rest using AES-256
+	•	Refresh tokens rotated on each use
+	•	JWT tokens for API authentication with 1 hour expiration
+8.2 Data Encryption
+	•	All data encrypted at rest in PostgreSQL using transparent data encryption
+	•	TLS 1.3 for all data in transit
+	•	Secrets managed via environment variables, never committed to code
+	•	API keys rotated quarterly
+8.3 Authorization (Future Multi-User)
+	•	Role-based access control: Admin, Manager, Analyst
+	•	Row-level security in PostgreSQL limiting data access by user
+	•	Audit logging of all data access and modifications
+	•	Data isolation: users only see meetings they attended or own
+9. Deployment Architecture
+9.1 Infrastructure Components
+	•	Web application: Docker container running React SPA served by Nginx
+	•	API service: Docker container running FastAPI with Uvicorn
+	•	Worker processes: Celery workers for async task processing
+	•	Scheduler: Celery Beat for scheduled tasks
+	•	Database: PostgreSQL 15 container with persistent volume
+	•	Cache/Queue: Redis 7 container
+	•	Reverse proxy: Nginx for routing and SSL termination
+9.2 Hosting Options
+Option A: AWS ECS (Recommended)
+	•	Fargate for serverless container orchestration
+	•	RDS PostgreSQL for managed database
+	•	ElastiCache Redis for managed cache
+	•	Auto-scaling based on CPU and request metrics
+Option B: DigitalOcean App Platform
+	•	Simpler setup, lower cost for single-user MVP
+	•	Managed PostgreSQL and Redis
+	•	Built-in CI/CD from GitHub
+9.3 Monitoring and Observability
+	•	Application metrics: Prometheus + Grafana
+	•	Error tracking: Sentry for exception monitoring
+	•	Logging: Structured JSON logs aggregated to CloudWatch or Papertrail
+	•	Uptime monitoring: UptimeRobot for 24/7 availability checks
+	•	Performance monitoring: NewRelic APM for request tracing
+10. Development Workflow
+10.1 Local Development Setup
+git clone repo
+cd meeting-intelligence-system
+cp .env.example .env
+docker-compose up -d postgres redis
+cd backend && poetry install
+alembic upgrade head
+uvicorn main:app --reload
+cd ../frontend && npm install
+npm run dev
+10.2 Testing Strategy
+Unit Tests
+	•	pytest for Python backend with 80 percent coverage target
+	•	Jest for React frontend with 70 percent coverage target
+	•	Mock external APIs for isolated testing
+Integration Tests
+	•	Test database interactions with test database
+	•	Test API endpoints with test client
+	•	Test AI pipeline with sample transcripts
+End-to-End Tests
+	•	Playwright for critical user flows
+	•	Test email generation and calendar sync
+11. Performance Optimization
+11.1 Database Optimization
+	•	Strategic indexes on high-query columns
+	•	Query result caching in Redis with 5 minute TTL
+	•	Connection pooling with max 20 connections
+	•	Batch inserts for extracted data
+11.2 API Optimization
+	•	GraphQL-style field selection to reduce payload size
+	•	Response compression with gzip
+	•	ETags for conditional requests
+	•	Pagination with cursor-based approach for large lists
+11.3 Frontend Optimization
+	•	Code splitting with React lazy loading
+	•	React Query for intelligent caching and background updates
+	•	Virtual scrolling for long lists
+	•	Asset optimization: Webpack bundle analysis and tree shaking
+12. Future Technical Enhancements
+12.1 Real-Time Features
+	•	WebSocket connections for live updates
+	•	Collaborative editing of meeting notes
+	•	Real-time notifications for task assignments
+12.2 Advanced AI Capabilities
+	•	Fine-tuned models on company-specific terminology
+	•	Sentiment analysis for relationship health scoring
+	•	Predictive analytics for deal outcomes
+	•	Voice-activated queries with speech recognition
+12.3 Scalability Improvements
+	•	Kubernetes orchestration for multi-region deployment
+	•	Read replicas for geographically distributed teams
+	•	CDN for static assets
+	•	Microservices decomposition for independent scaling
+
+End of Technical Design Document

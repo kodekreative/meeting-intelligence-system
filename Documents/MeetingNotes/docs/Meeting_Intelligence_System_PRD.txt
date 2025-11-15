@@ -1,0 +1,259 @@
+Meeting Intelligence System
+Product Requirements Document
+Pine Lake Capital & Conversely AI
+Version 1.0 | November 2025
+1. Executive Summary
+The Meeting Intelligence System is a comprehensive platform designed to transform how business professionals manage meeting knowledge, relationships, and action items. By leveraging AI to extract insights from meeting transcriptions stored in Airtable, the system provides daily intelligence briefings, automated task tracking, and relationship management capabilities.
+Key Value Propositions:
+	•	Never walk into a meeting unprepared with comprehensive historical context
+	•	Automatically track and follow up on commitments across your organization
+	•	Build stronger relationships with personalized intelligence on key contacts
+	•	Maintain visibility on business issues and opportunities across portfolio companies
+	•	Scale relationship intelligence for teams with role-based access and workflows
+2. Product Vision & Goals
+2.1 Vision Statement
+To become the central nervous system for business relationship management by transforming unstructured meeting data into actionable intelligence that drives better decisions, stronger relationships, and improved execution.
+2.2 Primary Goals
+	•	Meeting Preparation Excellence: Reduce meeting prep time by 80 percent while improving context quality
+	•	Task Execution Visibility: Ensure zero action items fall through the cracks with automated tracking
+	•	Relationship Intelligence: Surface personal context that strengthens business relationships
+	•	Portfolio Oversight: Maintain real-time awareness of issues across portfolio companies
+	•	Team Scalability: Enable multiple users while maintaining data security and relevance
+3. User Personas
+3.1 Primary User: Managing Partner
+Profile: Peter, Managing Partner at Pine Lake Capital and Founder of Conversely AI
+	•	Attends approximately 40 meetings per week across multiple companies
+	•	Manages multiple Outlook calendars for different portfolio companies
+	•	Needs to maintain deep context on 20 plus active portfolio companies and prospects
+	•	Values relationship building and personal connection with executives
+	•	Requires visibility into team execution on commitments
+Pain Points:
+	•	Difficult to recall past conversations when preparing for meetings
+	•	Action items get lost across dozens of weekly meetings
+	•	Personal details that could strengthen relationships are forgotten
+	•	No unified view of issues across portfolio companies
+3.2 Secondary User: Team Member
+Profile: Analyst or Associate at Pine Lake Capital
+	•	Participates in subset of meetings related to assigned portfolio companies
+	•	Receives action items from meetings
+	•	Needs visibility into their assigned tasks and deadlines
+Pain Points:
+	•	Unclear which tasks require immediate attention
+	•	Difficulty tracking context across multiple ongoing initiatives
+	•	No automated reminders for upcoming deliverables
+4. Core Features & User Stories
+4.1 Feature: Daily Meeting Preparation Brief
+Description: Automated email delivered at 6am with comprehensive context for each meeting scheduled that day.
+User Story: As a Managing Partner, I want to receive a morning email with context for today's meetings so that I walk into every call fully prepared with relevant history.
+Acceptance Criteria:
+	•	Email arrives daily at 6am with list of today's meetings from all synced calendars
+	•	For each meeting, includes participants, company context, and meeting objective
+	•	Displays summary of all previous meetings with same participants or company
+	•	Highlights key decisions, unresolved issues, and pending action items from past meetings
+	•	Surfaces relevant personal intelligence notes for relationship building
+	•	Links to web UI for deeper exploration of meeting history
+4.2 Feature: Action Item Tracking & Reminders
+Description: AI-powered extraction of action items from meeting transcripts with automated assignment, due date management, and daily reminders.
+User Story: As a Managing Partner, I want action items automatically extracted and tracked so that I can ensure all commitments are being executed without manual follow-up.
+Acceptance Criteria:
+	•	AI extracts action items from meeting transcripts with assignee and task description
+	•	Default due date set to end of week from meeting date
+	•	AI parses contextual due dates like by Friday or by end of month from transcript
+	•	Daily 6am email lists user's own action items due today or overdue
+	•	Tasks can have status: Open, In Progress, Complete, Overdue
+	•	Web UI allows updating status and due dates
+4.3 Feature: Follow-Up Management
+Description: Automated alerts for action items assigned to others that require follow-up based on age and status.
+User Story: As a Managing Partner, I want to be notified when team members' tasks need follow-up so that projects don't stall due to blocked dependencies.
+Acceptance Criteria:
+	•	Daily 6am email lists tasks assigned to others requiring follow-up
+	•	Follow-up triggered for In Progress tasks older than 7 days default, configurable
+	•	Follow-up triggered for Open tasks approaching due date with no status update
+	•	Email includes context: meeting source, task description, assignee, days since assigned
+	•	Quick link to send follow-up email to assignee directly from UI
+4.4 Feature: Business Issues Dashboard
+Description: AI-identified business issues, risks, and opportunities organized by company with daily digest.
+User Story: As a Managing Partner, I want to see all active business issues organized by portfolio company so that I can prioritize my attention and support.
+Acceptance Criteria:
+	•	AI identifies issues from transcripts based on keywords: risk, concern, blocker, problem, challenge
+	•	Issues categorized by: Financial, Operational, Strategic, Personnel, Compliance
+	•	Daily 6am email groups active issues by company with priority ranking
+	•	Each issue shows: description, source meeting, date identified, related action items
+	•	Issues can be marked as resolved or require continued monitoring
+	•	Web UI provides company-centric view of all issues with timeline
+4.5 Feature: Personal Intelligence & Relationship Building
+Description: AI extraction of personal details from conversations with reminder system for follow-up opportunities.
+User Story: As a Managing Partner, I want to remember and follow up on personal details from conversations so that I can build stronger, more authentic relationships.
+Acceptance Criteria:
+	•	AI extracts personal details from transcripts: family events, hobbies, health, travel, career milestones
+	•	Each detail stored with: person, category, description, date captured, source meeting
+	•	System suggests follow-up timing based on event type: graduations get reminder week before, vacations get reminder day after return
+	•	Daily 6am email lists relationship follow-ups for the day
+	•	Details appear in meeting prep brief when meeting with that person
+	•	Web UI shows person-centric relationship history with all personal notes
+4.6 Feature: Team Task Distribution
+Description: Review and send function for distributing action item emails to team members.
+User Story: As a Managing Partner, I want to review and approve team member task emails before sending so that I can ensure context and priorities are clear.
+Acceptance Criteria:
+	•	System generates draft emails for each team member with their assigned tasks
+	•	Review UI shows preview of each team member's email with task list
+	•	User can edit task descriptions, due dates, or remove tasks before sending
+	•	Each email includes: task description, due date, source meeting context, link to meeting notes
+	•	Single click to send all approved emails at once
+	•	Track delivery status and read receipts
+4.7 Feature: Multi-Calendar Integration
+Description: Sync with multiple Outlook calendars to aggregate meetings across portfolio companies.
+User Story: As a Managing Partner, I want all my company calendars synced in one place so that I have a unified view of my meeting schedule.
+Acceptance Criteria:
+	•	Authenticate with Microsoft Graph API to access multiple calendars
+	•	User can select which calendars to sync from available list
+	•	System polls calendars hourly for new or updated meetings
+	•	New calendar events automatically create placeholder Airtable records
+	•	Meeting prep email includes meetings from all synced calendars
+	•	Web UI shows unified calendar view with color coding by company
+4.8 Feature: Web UI Dashboard
+Description: Modern, responsive web interface with multiple view modes for exploring meeting data and managing tasks.
+User Story: As a Managing Partner, I want a clean, intuitive interface to explore my meeting history and manage tasks so that I can quickly find information and take action.
+View Modes:
+Today's Dashboard View
+	•	Today's meetings with preparation context
+	•	My action items due today or overdue
+	•	Tasks requiring follow-up
+	•	Active business issues requiring attention
+	•	Personal follow-ups scheduled for today
+Company-Centric View
+	•	List of all companies with meeting counts and recency
+	•	Drill down shows: timeline of all meetings, key participants, unresolved issues, pending action items
+	•	AI-generated company summary based on meeting history
+Person-Centric View
+	•	Directory of all contacts with meeting frequency
+	•	Drill down shows: relationship timeline, personal intelligence notes, action items
+	•	Relationship strength score based on interaction frequency and personal connection depth
+Task Management View
+	•	Kanban board with columns: Open, In Progress, Requires Follow-up, Complete
+	•	Filter by: assignee, company, due date, status
+	•	Drag and drop to update status
+	•	Bulk actions: reassign, update due dates, send reminders
+5. Data Model
+Table
+Key Fields
+Purpose
+Meetings
+Meeting Date, Participants, Company, Summary, Transcript, Topics, Key Questions, Report URL
+Source of truth for all meeting data from Read.ai
+Companies
+Company Name, Type, Relationship Status, Industry, Owner
+Organize meetings and context by business entity
+Contacts
+Name, Email, Company, Role, First Met, Last Contact, Meeting Count
+Track individuals across meetings and companies
+Action Items
+Task Description, Assignee, Due Date, Status, Source Meeting, Created Date, Completed Date
+Extracted commitments requiring follow-through
+Personal Intelligence
+Contact, Detail Description, Category, Date Captured, Source Meeting, Reminder Date, Status
+Personal context for relationship building
+Business Issues
+Issue Description, Company, Category, Severity, Date Identified, Source Meeting, Status, Related Action Items
+Track risks and concerns across portfolio
+Users
+Name, Email, Role, Permissions, Calendar IDs, Email Preferences
+Future multi-user support with role-based access
+
+6. User Workflows
+6.1 Daily Morning Routine
+	•	6:00 AM - Receive five separate emails: Meeting Prep, My Tasks, Follow-Ups, Business Issues, Personal Follow-Ups
+	•	Review meeting prep email for context on first meetings of day
+	•	Check action items email to prioritize tasks for the day
+	•	Review follow-ups email to identify team members needing check-in
+	•	Note business issues requiring attention during calls
+	•	Reference personal intelligence to incorporate into conversations
+6.2 Pre-Meeting Preparation
+	•	Open web UI and navigate to company view for upcoming meeting
+	•	Review timeline of past meetings and key discussion points
+	•	Check status of open action items from previous meetings
+	•	Review personal intelligence notes for attendees
+	•	Note any business issues to address during call
+6.3 Post-Meeting Processing
+	•	Meeting auto-captured in Airtable via existing workflow
+	•	System processes transcript overnight using AI extraction
+	•	Action items, personal intelligence, and business issues automatically created
+	•	Default due dates assigned to action items
+	•	Data available in next morning's emails and web UI
+6.4 Task Distribution to Team
+	•	Open Review and Send interface in web UI
+	•	System shows preview of draft emails for each team member with assigned tasks
+	•	Review task descriptions and due dates, make adjustments as needed
+	•	Remove any tasks that need clarification before assignment
+	•	Add optional personal message to team member emails
+	•	Click Send All to distribute emails with task assignments
+7. Success Metrics
+7.1 Efficiency Metrics
+	•	Meeting Prep Time: Reduce from 10 minutes per meeting to 2 minutes, 80 percent reduction
+	•	Task Follow-Up Time: Reduce from 30 minutes daily to 5 minutes with automated tracking
+	•	Context Recall: Increase from 40 percent manual recall to 100 percent with AI assistance
+7.2 Effectiveness Metrics
+	•	Task Completion Rate: Achieve 95 percent on-time completion of tracked action items
+	•	Relationship Quality: Personal follow-ups referenced in 60 percent of meetings
+	•	Issue Resolution Time: Reduce time from identification to resolution by 40 percent
+7.3 Adoption Metrics
+	•	Daily Email Open Rate: Target 90 percent of users opening daily digest emails
+	•	Web UI Usage: Average 3 plus sessions per user per week
+	•	Task Status Updates: 80 percent of action items receive status updates within 48 hours
+8. Technical Considerations
+8.1 AI Accuracy Requirements
+	•	Action Item Extraction: 95 percent precision, 85 percent recall
+	•	Assignee Identification: 90 percent accuracy
+	•	Personal Intelligence Extraction: 80 percent precision acceptable given high value of true positives
+	•	Business Issue Classification: 85 percent accuracy across five categories
+8.2 Performance Requirements
+	•	Daily email delivery at exactly 6:00 AM in user's timezone
+	•	Meeting transcript processing completed within 2 hours of meeting end
+	•	Web UI page load time under 2 seconds
+	•	Calendar sync every 60 minutes with 99.5 percent uptime
+8.3 Security & Privacy
+	•	All meeting data encrypted at rest and in transit
+	•	Role-based access control for multi-user deployment
+	•	OAuth 2.0 authentication for calendar and email access
+	•	Audit logging of all data access and modifications
+	•	Compliance with SOC 2 requirements for future enterprise deployment
+9. Future Enhancements
+9.1 Phase 2: Advanced Intelligence
+	•	Sentiment analysis on meeting tone and relationship health
+	•	Predictive analytics for deal pipeline and risk assessment
+	•	Network analysis to identify key influencers and relationship paths
+	•	Automated meeting summaries sent to participants
+9.2 Phase 3: Team Collaboration
+	•	Shared team dashboards with aggregated views
+	•	Collaborative note-taking during meetings
+	•	Team performance analytics on task completion
+	•	Integration with project management tools like Asana, Linear
+9.3 Phase 4: Mobile & Voice
+	•	Native iOS and Android apps for on-the-go access
+	•	Voice-activated queries for meeting context lookup
+	•	Real-time meeting coaching with AI-powered suggestions
+	•	SMS reminders for high-priority action items
+10. Appendix
+10.1 Email Template Specifications
+Meeting Preparation Email
+	•	Subject: Your Meetings for Today, date
+	•	Sections: Meeting List, Historical Context, Key Participants, Personal Notes, Action Items
+	•	Format: HTML with company logo, clean typography, mobile-responsive
+Action Items Email
+	•	Subject: Your Tasks for Today, date
+	•	Sections: Due Today, Overdue, Due This Week
+	•	Each task includes: Description, Source Meeting, Due Date, Quick Actions
+Follow-Up Email
+	•	Subject: Tasks Requiring Your Follow-Up, date
+	•	Grouped by: Assignee, Days In Progress, Priority
+	•	Quick action: Send Reminder button for each task
+Business Issues Email
+	•	Subject: Business Issues Requiring Attention, date
+	•	Grouped by: Company, Priority Level, Days Active
+	•	Each issue includes: Description, Category, Related Action Items
+Personal Intelligence Email
+	•	Subject: Personal Follow-Ups for Today, date
+	•	Sections: Family Events, Career Milestones, Personal Interests
+	•	Each item includes: Person, Context, Suggested Follow-Up Language
+
+End of Product Requirements Document
