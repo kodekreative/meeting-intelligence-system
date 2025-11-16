@@ -204,6 +204,7 @@ export class AirtableClient {
     status?: string
     dueBefore?: Date
     dueAfter?: Date
+    maxRecords?: number
   }): Promise<ActionItemRecord[]> {
     const filters: string[] = []
     if (options?.assigneeId) {
@@ -226,6 +227,7 @@ export class AirtableClient {
       {
         filterByFormula: filterFormula,
         sort: [{ field: 'Due Date', direction: 'asc' }],
+        maxRecords: options?.maxRecords,
       }
     )
 
@@ -248,6 +250,13 @@ export class AirtableClient {
     updates: Partial<ActionItemRecord['fields']>
   ): Promise<void> {
     await this.base(AIRTABLE_TABLES.ACTION_ITEMS).update(itemId, updates as FieldSet)
+  }
+
+  /**
+   * Delete an action item
+   */
+  async deleteActionItem(itemId: string): Promise<void> {
+    await this.base(AIRTABLE_TABLES.ACTION_ITEMS).destroy(itemId)
   }
 
   /**

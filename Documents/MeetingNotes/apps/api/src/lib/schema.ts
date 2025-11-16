@@ -100,11 +100,12 @@ export interface ActionItemRecord {
   id: string
   fields: {
     'Task Description': string
-    'Assignee': string[] // Link to Contacts table
+    'Assignee': string // Assignee name as text
     'Due Date': string // ISO date
     'Status': 'Open' | 'In Progress' | 'Complete' | 'Overdue'
     'Priority': 'Low' | 'Medium' | 'High' | 'Critical'
     'Source Meeting': string[] // Link to Meetings table
+    'Title'?: string[] // Lookup field from Source Meeting (returns array)
     'Company': string[] // Link to Companies table (lookup from meeting)
     'Completed At': string // ISO timestamp
     'Last Followed Up': string // ISO timestamp

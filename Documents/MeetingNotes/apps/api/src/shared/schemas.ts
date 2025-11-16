@@ -149,7 +149,8 @@ export const actionItemSchema = z.object({
 export const updateActionItemSchema = z.object({
   taskDescription: z.string().min(1).optional(),
   assigneeId: z.string().optional(),
-  dueDate: z.date().optional(),
+  assignee: z.string().optional(),
+  dueDate: z.string().optional(), // Changed to string for API compatibility
   status: actionItemStatusSchema.optional(),
   priority: actionItemPrioritySchema.optional(),
   notes: z.string().optional(),

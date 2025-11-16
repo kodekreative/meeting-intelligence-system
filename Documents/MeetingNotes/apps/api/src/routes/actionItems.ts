@@ -47,15 +47,17 @@ router.get(
     const transformedItems = actionItems.map((item) => ({
       id: item.id,
       taskDescription: item.fields['Task Description'],
-      assigneeId: item.fields.Assignee?.[0],
+      assignee: item.fields.Assignee,
       dueDate: item.fields['Due Date'],
       status: item.fields.Status,
       priority: item.fields.Priority,
       sourceMeetingId: item.fields['Source Meeting']?.[0],
+      sourceMeetingTitle: item.fields.Title?.[0], // Lookup field returns array
       companyId: item.fields.Company?.[0],
       completedAt: item.fields['Completed At'],
       lastFollowedUp: item.fields['Last Followed Up'],
       extractionConfidence: item.fields['Extraction Confidence'],
+      createdAt: item.fields.Created,
     }))
 
     // Cache the result
@@ -86,19 +88,22 @@ router.patch(
 
     // Map to Airtable field names
     const updates: Record<string, unknown> = {}
-    if (validatedData.taskDescription) {
+    if (validatedData.taskDescription !== undefined) {
       updates['Task Description'] = validatedData.taskDescription
     }
-    if (validatedData.status) {
+    if (validatedData.assignee !== undefined) {
+      updates['Assignee'] = validatedData.assignee
+    }
+    if (validatedData.status !== undefined) {
       updates['Status'] = validatedData.status
     }
-    if (validatedData.priority) {
+    if (validatedData.priority !== undefined) {
       updates['Priority'] = validatedData.priority
     }
-    if (validatedData.dueDate) {
-      updates['Due Date'] = validatedData.dueDate.toISOString().split('T')[0]
+    if (validatedData.dueDate !== undefined) {
+      updates['Due Date'] = validatedData.dueDate
     }
-    if (validatedData.notes) {
+    if (validatedData.notes !== undefined) {
       updates['Notes'] = validatedData.notes
     }
 
