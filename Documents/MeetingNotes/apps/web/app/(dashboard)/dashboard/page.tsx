@@ -14,12 +14,12 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="h-full bg-gray-50">
-        <div className="h-12 bg-white border-b border-gray-200 flex items-center px-6">
-          <h1 className="text-sm font-semibold text-gray-900">Dashboard</h1>
+      <div className="h-full bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+        <div className="h-12 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center px-6">
+          <h1 className="text-sm font-semibold text-white">Dashboard</h1>
         </div>
         <div className="p-6">
-          <div className="text-xs text-gray-600">Loading today's meetings...</div>
+          <div className="text-xs text-gray-300">Loading today's meetings...</div>
         </div>
       </div>
     )
@@ -27,15 +27,15 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="h-full bg-gray-50">
-        <div className="h-12 bg-white border-b border-gray-200 flex items-center px-6">
-          <h1 className="text-sm font-semibold text-gray-900">Dashboard</h1>
+      <div className="h-full bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+        <div className="h-12 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center px-6">
+          <h1 className="text-sm font-semibold text-white">Dashboard</h1>
         </div>
         <div className="p-6">
-          <div className="bg-red-50 border border-red-200 px-4 py-3">
-            <div className="text-xs font-medium text-red-900 mb-1">Connection Error</div>
-            <div className="text-xs text-red-700">{error.message}</div>
-            <div className="text-xs text-red-600 mt-1">Make sure the backend API is running on port 3001</div>
+          <div className="bg-red-500/10 backdrop-blur-md border border-red-500/20 px-4 py-3 rounded-lg">
+            <div className="text-xs font-medium text-red-300 mb-1">Connection Error</div>
+            <div className="text-xs text-red-400">{error.message}</div>
+            <div className="text-xs text-red-400 mt-1">Make sure the backend API is running on port 3001</div>
           </div>
         </div>
       </div>
@@ -46,26 +46,32 @@ export default function DashboardPage() {
   const todayDate = formatDate(new Date())
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gradient-to-br from-gray-900 via-slate-900 to-black overflow-hidden relative">
+      {/* Animated background gradients */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
       {/* Header bar */}
-      <div className="h-12 bg-white border-b border-gray-200 flex items-center px-6 justify-between">
-        <h1 className="text-sm font-semibold text-gray-900">Dashboard</h1>
-        <div className="text-xs text-gray-600">{todayDate}</div>
+      <div className="h-12 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center px-6 justify-between relative z-10">
+        <h1 className="text-sm font-semibold text-white">Dashboard</h1>
+        <div className="text-xs text-gray-300">{todayDate}</div>
       </div>
 
       {/* Main content */}
-      <div className="p-6">
+      <div className="p-6 relative z-10">
         <div className="max-w-6xl">
           {/* Today's Meetings Section */}
           <div className="mb-6">
-            <h2 className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h2 className="text-xs font-semibold text-gray-300 mb-3 uppercase tracking-wide">
               Today's Meetings
             </h2>
 
             {meetings.length === 0 ? (
-              <div className="bg-white border border-gray-200 px-6 py-8 text-center">
-                <div className="text-xs text-gray-600">No meetings scheduled for today</div>
-                <div className="text-xs text-gray-500 mt-1">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 px-6 py-8 text-center rounded-lg">
+                <div className="text-xs text-gray-300">No meetings scheduled for today</div>
+                <div className="text-xs text-gray-400 mt-1">
                   Your calendar is clear
                 </div>
               </div>
@@ -74,15 +80,15 @@ export default function DashboardPage() {
                 {meetings.map((meeting: any) => (
                   <div
                     key={meeting.id}
-                    className="bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+                    className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all rounded-lg"
                   >
                     <div className="px-4 py-3">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="text-xs font-medium text-gray-900 mb-1">
+                          <div className="text-xs font-medium text-white mb-1">
                             {meeting.title || 'Team Discussion'}
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-600">
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
                             {meeting.startTime && (
                               <span>{formatDateTime(meeting.startTime)}</span>
                             )}
@@ -102,7 +108,7 @@ export default function DashboardPage() {
                             href={meeting.reportUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline"
+                            className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
                           >
                             View Report
                           </a>
@@ -110,9 +116,9 @@ export default function DashboardPage() {
                       </div>
 
                       {meeting.participants && meeting.participants.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <div className="text-xs text-gray-500 mb-1">Participants:</div>
-                          <div className="text-xs text-gray-700">
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <div className="text-xs text-gray-400 mb-1">Participants:</div>
+                          <div className="text-xs text-gray-300">
                             {meeting.participants.slice(0, 5).join(', ')}
                             {meeting.participants.length > 5 && ` +${meeting.participants.length - 5} more`}
                           </div>
@@ -120,9 +126,9 @@ export default function DashboardPage() {
                       )}
 
                       {meeting.topics && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <div className="text-xs text-gray-500 mb-1">Topics:</div>
-                          <div className="text-xs text-gray-700">{meeting.topics}</div>
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <div className="text-xs text-gray-400 mb-1">Topics:</div>
+                          <div className="text-xs text-gray-300">{meeting.topics}</div>
                         </div>
                       )}
                     </div>
@@ -134,17 +140,17 @@ export default function DashboardPage() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-200 px-4 py-3">
-              <div className="text-xs text-gray-500 mb-1">Meetings Today</div>
-              <div className="text-lg font-semibold text-gray-900">{meetings.length}</div>
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 px-4 py-3 rounded-lg">
+              <div className="text-xs text-gray-400 mb-1">Meetings Today</div>
+              <div className="text-lg font-semibold text-white">{meetings.length}</div>
             </div>
-            <div className="bg-white border border-gray-200 px-4 py-3">
-              <div className="text-xs text-gray-500 mb-1">Action Items</div>
-              <div className="text-lg font-semibold text-gray-900">-</div>
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 px-4 py-3 rounded-lg">
+              <div className="text-xs text-gray-400 mb-1">Action Items</div>
+              <div className="text-lg font-semibold text-white">-</div>
             </div>
-            <div className="bg-white border border-gray-200 px-4 py-3">
-              <div className="text-xs text-gray-500 mb-1">Follow-ups Needed</div>
-              <div className="text-lg font-semibold text-gray-900">-</div>
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 px-4 py-3 rounded-lg">
+              <div className="text-xs text-gray-400 mb-1">Follow-ups Needed</div>
+              <div className="text-lg font-semibold text-white">-</div>
             </div>
           </div>
         </div>

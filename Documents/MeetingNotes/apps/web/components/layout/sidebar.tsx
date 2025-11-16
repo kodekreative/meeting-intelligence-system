@@ -1,28 +1,32 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Meetings', href: '/meetings' },
   { name: 'Action Items', href: '/action-items' },
-  { name: 'Companies', href: '/companies' },
+  { name: 'Meeting Titles', href: '/companies' },
   { name: 'Contacts', href: '/contacts' },
   { name: 'Intelligence', href: '/intelligence' },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   return (
-    <div className="flex h-screen w-52 flex-col border-r border-gray-200 bg-white">
+    <div className="flex h-screen w-52 flex-col border-r border-white/10 bg-gradient-to-b from-gray-900 to-black backdrop-blur-md" style={{ position: 'relative', zIndex: 10 }}>
       {/* Header */}
-      <div className="flex h-12 items-center px-4 border-b border-gray-200">
-        <Link href="/" className="text-sm font-semibold text-gray-900">
+      <div className="flex h-12 items-center px-4 border-b border-white/10">
+        <button
+          onClick={() => router.push('/')}
+          className="text-sm font-semibold text-white cursor-pointer hover:text-gray-300 transition-colors"
+        >
           Meeting Intelligence
-        </Link>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -30,26 +34,26 @@ export function Sidebar() {
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
           return (
-            <Link
+            <button
               key={item.name}
-              href={item.href}
+              onClick={() => router.push(item.href)}
               className={cn(
-                'block px-3 py-1.5 text-xs transition-colors',
+                'w-full text-left block px-3 py-1.5 text-xs transition-colors cursor-pointer rounded',
                 isActive
-                  ? 'bg-gray-100 text-gray-900 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-white/10 text-white font-medium'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-gray-300'
               )}
             >
               {item.name}
-            </Link>
+            </button>
           )
         })}
       </nav>
 
       {/* User section */}
-      <div className="border-t border-gray-200 px-4 py-3">
-        <p className="text-xs font-medium text-gray-900">Peter Schmitt</p>
-        <p className="text-xs text-gray-500">peter@example.com</p>
+      <div className="border-t border-white/10 px-4 py-3">
+        <p className="text-xs font-medium text-white">Peter Schmitt</p>
+        <p className="text-xs text-gray-400">peter@example.com</p>
       </div>
     </div>
   )
