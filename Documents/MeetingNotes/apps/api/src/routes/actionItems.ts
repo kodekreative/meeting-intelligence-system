@@ -5,9 +5,9 @@
 import { Router, Request, Response } from 'express'
 import { getAirtableClient } from '../lib/client.js'
 import { asyncHandler, AppError } from '../middleware/errorHandler.js'
-import { cacheGet, cacheSet, cacheDelete } from '../utils/redis.js'
+import { cacheGet, cacheSet, cacheDeletePattern } from '../utils/redis.js'
 import { CACHE } from '../shared/constants.js'
-import { updateActionItemSchema } from '../shared/schemas.js'
+import { updateActionItemSchema, upsertEmailPreferenceSchema } from '../shared/schemas.js'
 
 const router = Router()
 
@@ -57,6 +57,8 @@ router.get(
       completedAt: item.fields['Completed At'],
       lastFollowedUp: item.fields['Last Followed Up'],
       extractionConfidence: item.fields['Extraction Confidence'],
+      notes: item.fields.Notes,
+      includeInDailyEmail: item.fields['Include in Daily Email'] ?? true, // Default to true
       createdAt: item.fields.Created,
     }))
 
@@ -106,13 +108,16 @@ router.patch(
     if (validatedData.notes !== undefined) {
       updates['Notes'] = validatedData.notes
     }
+    if (validatedData.includeInDailyEmail !== undefined) {
+      updates['Include in Daily Email'] = validatedData.includeInDailyEmail
+    }
 
     // Update in Airtable
     const airtable = getAirtableClient()
     await airtable.updateActionItem(id, updates)
 
-    // Invalidate cache
-    await cacheDelete(`${CACHE.KEYS.ACTION_ITEMS}:${id}`)
+    // Invalidate all action items cache entries (list and individual)
+    await cacheDeletePattern(`${CACHE.KEYS.ACTION_ITEMS}:*`)
 
     res.json({
       success: true,
@@ -180,6 +185,83 @@ router.get(
           priority: item.fields.Priority,
         })),
       },
+    })
+  })
+)
+
+/**
+ * GET /api/v1/action-items/email-preferences
+ * Get all email preferences for assignees
+ */
+router.get(
+  '/email-preferences',
+  asyncHandler(async (req: Request, res: Response) => {
+    const airtable = getAirtableClient()
+    const preferences = await airtable.getEmailPreferences()
+
+    const transformedPrefs = preferences.map((pref) => ({
+      id: pref.id,
+      assigneeName: pref.fields['Assignee Name'],
+      emailEnabled: pref.fields['Email Enabled'] === true, // Airtable returns undefined for unchecked
+      notes: pref.fields['Notes'],
+      createdAt: pref.fields['Created'],
+      updatedAt: pref.fields['Last Modified'],
+    }))
+
+    res.json({
+      success: true,
+      data: transformedPrefs,
+    })
+  })
+)
+
+/**
+ * PUT /api/v1/action-items/email-preferences
+ * Create or update email preference for an assignee
+ */
+router.put(
+  '/email-preferences',
+  asyncHandler(async (req: Request, res: Response) => {
+    const validatedData = upsertEmailPreferenceSchema.parse(req.body)
+
+    const airtable = getAirtableClient()
+    const result = await airtable.upsertEmailPreference(
+      validatedData.assigneeName,
+      validatedData.emailEnabled,
+      validatedData.notes
+    )
+
+    res.json({
+      success: true,
+      data: {
+        id: result.id,
+        assigneeName: result.fields['Assignee Name'],
+        emailEnabled: result.fields['Email Enabled'],
+        notes: result.fields['Notes'],
+      },
+    })
+  })
+)
+
+/**
+ * GET /api/v1/action-items/email-preferences/map
+ * Get a simple map of assignee -> emailEnabled for quick lookup
+ */
+router.get(
+  '/email-preferences/map',
+  asyncHandler(async (req: Request, res: Response) => {
+    const airtable = getAirtableClient()
+    const prefsMap = await airtable.getEmailPreferencesMap()
+
+    // Convert Map to object for JSON response
+    const prefsObject: Record<string, boolean> = {}
+    for (const [key, value] of prefsMap) {
+      prefsObject[key] = value
+    }
+
+    res.json({
+      success: true,
+      data: prefsObject,
     })
   })
 )

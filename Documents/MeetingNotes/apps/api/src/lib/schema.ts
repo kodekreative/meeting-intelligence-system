@@ -14,6 +14,11 @@ export const AIRTABLE_TABLES = {
   PERSONAL_INTELLIGENCE: 'Personal Intelligence',
   BUSINESS_ISSUES: 'Business Issues',
   USERS: 'Users',
+  THEMES: 'themes',
+  MEETING_THEMES: 'meeting_themes',
+  THEME_OUTPUTS: 'theme_outputs',
+  CALENDAR_EVENTS: 'Calendar Events',
+  EMAIL_PREFERENCES: 'Email Preferences',
 } as const
 
 /**
@@ -43,6 +48,7 @@ export interface MeetingRecord {
     'Chapter Summaries'?: string // Chapter-by-chapter summaries
     'Transcript Speakers'?: string // Speaker identification
     'Speaker Blocks'?: string // Speaker-attributed transcript blocks
+    'theme'?: string[] // Link to themes table
   }
 }
 
@@ -64,6 +70,7 @@ export interface CompanyRecord {
     'Meetings': string[] // Link to Meetings table
     'Action Items': string[] // Link to Action Items table
     'Business Issues': string[] // Link to Business Issues table
+    'theme'?: string[] // Link to themes table
     'Created': string
     'Last Modified': string
   }
@@ -111,6 +118,8 @@ export interface ActionItemRecord {
     'Last Followed Up': string // ISO timestamp
     'Extraction Confidence': number // 0-1 confidence score
     'Notes': string // Additional context
+    'theme'?: string[] // Link to themes table
+    'Include in Daily Email'?: boolean // Whether to include in daily email reports (default: true)
     'Created': string
     'Last Modified': string
   }
@@ -156,6 +165,7 @@ export interface BusinessIssueRecord {
     'Resolved At': string // ISO timestamp
     'Extraction Confidence': number // 0-1 confidence score
     'Notes': string
+    'theme'?: string[] // Link to themes table
     'Created': string
     'Last Modified': string
   }
@@ -176,8 +186,105 @@ export interface UserRecord {
     'Calendar IDs': string[] // Array of synced Outlook calendar IDs
     'Email Preferences': string // JSON string of preferences
     'Last Login': string // ISO timestamp
+    'Microsoft Access Token': string // Encrypted OAuth access token
+    'Microsoft Refresh Token': string // Encrypted OAuth refresh token
+    'Microsoft Token Expires At': string // ISO timestamp
+    'iCalendar URL': string // Outlook.com iCalendar/ICS URL (simpler alternative to OAuth)
+    'Calendar Connected': boolean // Whether calendar is connected
+    'Last Calendar Sync': string // ISO timestamp of last sync
     'Created': string
     'Last Modified': string
+  }
+}
+
+/**
+ * Themes Table
+ * Custom themes for organizing meetings within a specific title/company
+ */
+export interface ThemeRecord {
+  id: string
+  fields: {
+    'name': string
+    'description'?: string
+    'color_code': string // Hex color (#RRGGBB)
+    'icon'?: string // Icon identifier (lucide-react icon name)
+    'company_id': string[] // Link to Companies table - theme belongs to this company
+    'is_active': boolean // Soft delete flag
+    'created_at': string // ISO timestamp
+    'updated_at': string // ISO timestamp
+  }
+}
+
+/**
+ * Meeting Themes Table
+ * Junction table linking meetings to themes with optional notes
+ */
+export interface MeetingThemeRecord {
+  id: string
+  fields: {
+    'meeting_id': string[] // Link to Meetings table
+    'theme_id': string[] // Link to themes table
+    'notes'?: string // Optional context for why this theme was applied
+    'created_at': string // ISO timestamp
+    'created_by': string // User ID who tagged the meeting
+  }
+}
+
+/**
+ * Theme Outputs Table
+ * AI-generated insights and content organized by theme from meeting transcripts
+ */
+export interface ThemeOutputRecord {
+  id: string
+  fields: {
+    'meeting_id': string[] // Link to Meetings table
+    'theme_id': string[] // Link to themes table
+    'output_type': 'Summary' | 'Key Points' | 'Decisions' | 'Action Items' | 'Questions' | 'Risks' | 'Custom'
+    'content': string // The AI-generated text content
+    'confidence_score': number // 0-1 confidence score from AI
+    'source_section'?: string // Reference to specific transcript section/chapter
+    'metadata'?: string // JSON string for additional structured data
+    'created_at': string // ISO timestamp
+    'updated_at': string // ISO timestamp
+  }
+}
+
+/**
+ * Calendar Events Table
+ * Synced calendar events from Microsoft Outlook/Exchange
+ */
+export interface CalendarEventRecord {
+  id: string
+  fields: {
+    'Calendar Event ID': string // Microsoft Graph event ID
+    'Subject': string // Meeting subject/title
+    'Start Time': string // ISO timestamp
+    'End Time': string // ISO timestamp
+    'Location': string // Meeting location
+    'Attendees': string // Comma-separated email addresses
+    'Organizer': string // Organizer email address
+    'Description': string // Event body/description
+    'Is Online Meeting': boolean // Whether it's an online meeting
+    'Meeting URL': string // Online meeting URL (Teams, etc.)
+    'User': string[] // Link to Users table
+    'Last Synced': string // ISO timestamp of last sync
+    'Created': string // ISO timestamp
+    'Last Modified': string // ISO timestamp
+  }
+}
+
+/**
+ * Email Preferences Table
+ * Controls whether specific assignees receive daily email reports
+ */
+export interface EmailPreferencesRecord {
+  id: string
+  fields: {
+    'Assignee Name': string // Canonical assignee name (e.g., "Bill Shansky")
+    'Email Enabled': boolean // Whether to include this assignee's tasks in daily emails
+    'Notes'?: string // Optional notes about this preference
+    'Created': string // ISO timestamp
+    'Last Modified': string // ISO timestamp
   }
 }
 
@@ -192,6 +299,11 @@ export type AirtableRecord =
   | PersonalIntelligenceRecord
   | BusinessIssueRecord
   | UserRecord
+  | ThemeRecord
+  | MeetingThemeRecord
+  | ThemeOutputRecord
+  | CalendarEventRecord
+  | EmailPreferencesRecord
 
 /**
  * Field name mappings for easier access
@@ -275,5 +387,47 @@ export const FIELD_NAMES = {
     CALENDAR_IDS: 'Calendar IDs',
     EMAIL_PREFERENCES: 'Email Preferences',
     LAST_LOGIN: 'Last Login',
+  },
+  THEMES: {
+    NAME: 'name',
+    DESCRIPTION: 'description',
+    COLOR_CODE: 'color_code',
+    ICON: 'icon',
+    OWNER_ID: 'owner_id',
+    IS_ACTIVE: 'is_active',
+    CREATED_AT: 'created_at',
+    UPDATED_AT: 'updated_at',
+  },
+  MEETING_THEMES: {
+    MEETING_ID: 'meeting_id',
+    THEME_ID: 'theme_id',
+    NOTES: 'notes',
+    CREATED_AT: 'created_at',
+    CREATED_BY: 'created_by',
+  },
+  THEME_OUTPUTS: {
+    MEETING_ID: 'meeting_id',
+    THEME_ID: 'theme_id',
+    OUTPUT_TYPE: 'output_type',
+    CONTENT: 'content',
+    CONFIDENCE_SCORE: 'confidence_score',
+    SOURCE_SECTION: 'source_section',
+    METADATA: 'metadata',
+    CREATED_AT: 'created_at',
+    UPDATED_AT: 'updated_at',
+  },
+  CALENDAR_EVENTS: {
+    CALENDAR_EVENT_ID: 'Calendar Event ID',
+    SUBJECT: 'Subject',
+    START_TIME: 'Start Time',
+    END_TIME: 'End Time',
+    LOCATION: 'Location',
+    ATTENDEES: 'Attendees',
+    ORGANIZER: 'Organizer',
+    DESCRIPTION: 'Description',
+    IS_ONLINE_MEETING: 'Is Online Meeting',
+    MEETING_URL: 'Meeting URL',
+    USER: 'User',
+    LAST_SYNCED: 'Last Synced',
   },
 } as const

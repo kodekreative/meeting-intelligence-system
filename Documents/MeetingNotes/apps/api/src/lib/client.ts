@@ -14,6 +14,10 @@ import type {
   PersonalIntelligenceRecord,
   BusinessIssueRecord,
   UserRecord,
+  ThemeRecord,
+  MeetingThemeRecord,
+  ThemeOutputRecord,
+  EmailPreferencesRecord,
 } from './schema'
 import { AIRTABLE_TABLES } from './schema'
 
@@ -94,10 +98,16 @@ export class AirtableClient {
     const filters: string[] = []
 
     if (options?.fromDate) {
-      filters.push(`IS_AFTER({Start Time}, '${options.fromDate.toISOString()}')`)
+      // >= start of day: use NOT(IS_BEFORE(...))
+      const startOfDay = new Date(options.fromDate)
+      startOfDay.setUTCHours(0, 0, 0, 0)
+      filters.push(`NOT(IS_BEFORE({Start Time}, '${startOfDay.toISOString()}'))`)
     }
     if (options?.toDate) {
-      filters.push(`IS_BEFORE({Start Time}, '${options.toDate.toISOString()}')`)
+      // <= end of day: use NOT(IS_AFTER(...)) with end of day time
+      const endOfDay = new Date(options.toDate)
+      endOfDay.setUTCHours(23, 59, 59, 999)
+      filters.push(`NOT(IS_AFTER({Start Time}, '${endOfDay.toISOString()}'))`)
     }
 
     if (filters.length > 0) {
@@ -353,6 +363,327 @@ export class AirtableClient {
   }
 
   /**
+   * Themes - Get all themes or filter by owner/active status
+   */
+  async getThemes(options?: {
+    companyId?: string
+    isActive?: boolean
+  }): Promise<ThemeRecord[]> {
+    const filters: string[] = []
+    if (options?.companyId) {
+      filters.push(`{company_id} = '${options.companyId}'`)
+    }
+    if (options?.isActive !== undefined) {
+      filters.push(`{is_active} = ${options.isActive ? '1' : '0'}`)
+    }
+
+    const filterFormula = filters.length > 0 ? `AND(${filters.join(', ')})` : undefined
+
+    const records = await this.fetchWithRetry<ThemeRecord['fields']>(AIRTABLE_TABLES.THEMES, {
+      filterByFormula: filterFormula,
+      sort: [{ field: 'name', direction: 'asc' }],
+    })
+
+    return records.map((record) => ({ id: record.id, fields: record.fields }))
+  }
+
+  /**
+   * Get a single theme by ID
+   */
+  async getTheme(themeId: string): Promise<ThemeRecord | null> {
+    try {
+      const record = await this.base(AIRTABLE_TABLES.THEMES).find(themeId)
+      return {
+        id: record.id,
+        fields: record.fields as ThemeRecord['fields'],
+      }
+    } catch (error) {
+      console.error(`Failed to fetch theme ${themeId}:`, error)
+      return null
+    }
+  }
+
+  /**
+   * Create a new theme
+   */
+  async createTheme(fields: Partial<ThemeRecord['fields']>): Promise<ThemeRecord> {
+    const record = await this.base(AIRTABLE_TABLES.THEMES).create(fields as FieldSet)
+    return { id: record.id, fields: record.fields as ThemeRecord['fields'] }
+  }
+
+  /**
+   * Update a theme
+   */
+  async updateTheme(
+    themeId: string,
+    updates: Partial<ThemeRecord['fields']>
+  ): Promise<ThemeRecord> {
+    const record = await this.base(AIRTABLE_TABLES.THEMES).update(themeId, updates as FieldSet)
+    return { id: record.id, fields: record.fields as ThemeRecord['fields'] }
+  }
+
+  /**
+   * Delete a theme (soft delete by setting is_active to false)
+   */
+  async deleteTheme(themeId: string): Promise<void> {
+    await this.base(AIRTABLE_TABLES.THEMES).update(themeId, { is_active: false } as FieldSet)
+  }
+
+  /**
+   * Meeting Themes - Get all meeting-theme associations
+   */
+  async getMeetingThemes(options?: {
+    meetingId?: string
+    themeId?: string
+  }): Promise<MeetingThemeRecord[]> {
+    const filters: string[] = []
+    if (options?.meetingId) {
+      filters.push(`FIND('${options.meetingId}', {meeting_id})`)
+    }
+    if (options?.themeId) {
+      filters.push(`FIND('${options.themeId}', {theme_id})`)
+    }
+
+    const filterFormula = filters.length > 0 ? `AND(${filters.join(', ')})` : undefined
+
+    const records = await this.fetchWithRetry<MeetingThemeRecord['fields']>(
+      AIRTABLE_TABLES.MEETING_THEMES,
+      { filterByFormula: filterFormula }
+    )
+
+    return records.map((record) => ({ id: record.id, fields: record.fields }))
+  }
+
+  /**
+   * Create a meeting-theme association
+   */
+  async createMeetingTheme(
+    fields: Partial<MeetingThemeRecord['fields']>
+  ): Promise<MeetingThemeRecord> {
+    const record = await this.base(AIRTABLE_TABLES.MEETING_THEMES).create(fields as FieldSet)
+    return { id: record.id, fields: record.fields as MeetingThemeRecord['fields'] }
+  }
+
+  /**
+   * Delete a meeting-theme association
+   */
+  async deleteMeetingTheme(meetingThemeId: string): Promise<void> {
+    await this.base(AIRTABLE_TABLES.MEETING_THEMES).destroy(meetingThemeId)
+  }
+
+  /**
+   * Tag a meeting with multiple themes
+   */
+  async tagMeeting(
+    meetingId: string,
+    themeIds: string[],
+    createdBy: string,
+    notes?: string
+  ): Promise<MeetingThemeRecord[]> {
+    const createdRecords: MeetingThemeRecord[] = []
+
+    for (const themeId of themeIds) {
+      // Check if association already exists
+      const existing = await this.getMeetingThemes({ meetingId, themeId })
+      if (existing.length === 0) {
+        const record = await this.createMeetingTheme({
+          meeting_id: [meetingId],
+          theme_id: [themeId],
+          created_by: createdBy,
+          created_at: new Date().toISOString(),
+          notes,
+        })
+        createdRecords.push(record)
+      }
+    }
+
+    return createdRecords
+  }
+
+  /**
+   * Untag a meeting from a theme
+   */
+  async untagMeeting(meetingId: string, themeId: string): Promise<void> {
+    const associations = await this.getMeetingThemes({ meetingId, themeId })
+
+    for (const association of associations) {
+      await this.deleteMeetingTheme(association.id)
+    }
+  }
+
+  /**
+   * Get themes for a specific meeting
+   */
+  async getThemesForMeeting(meetingId: string): Promise<ThemeRecord[]> {
+    const meetingThemes = await this.getMeetingThemes({ meetingId })
+    const themeIds = meetingThemes
+      .map(mt => mt.fields.theme_id?.[0])
+      .filter((id): id is string => !!id)
+
+    const themes: ThemeRecord[] = []
+    for (const themeId of themeIds) {
+      const theme = await this.getTheme(themeId)
+      if (theme) {
+        themes.push(theme)
+      }
+    }
+
+    return themes
+  }
+
+  /**
+   * Get meetings for a specific theme
+   */
+  async getMeetingsForTheme(themeId: string): Promise<MeetingRecord[]> {
+    const meetingThemes = await this.getMeetingThemes({ themeId })
+    const meetingIds = meetingThemes
+      .map(mt => mt.fields.meeting_id?.[0])
+      .filter((id): id is string => !!id)
+
+    const meetings: MeetingRecord[] = []
+    for (const meetingId of meetingIds) {
+      const meeting = await this.getMeeting(meetingId)
+      if (meeting) {
+        meetings.push(meeting)
+      }
+    }
+
+    return meetings
+  }
+
+  /**
+   * Theme Outputs - Create a theme output record
+   */
+  async createThemeOutput(
+    fields: Omit<ThemeOutputRecord['fields'], 'created_at' | 'updated_at'>
+  ): Promise<ThemeOutputRecord> {
+    const now = new Date().toISOString()
+    const record = await this.base(AIRTABLE_TABLES.THEME_OUTPUTS).create({
+      ...fields,
+      created_at: now,
+      updated_at: now,
+    })
+    return record as unknown as ThemeOutputRecord
+  }
+
+  /**
+   * Theme Outputs - Get all outputs for a meeting
+   */
+  async getThemeOutputsForMeeting(meetingId: string): Promise<ThemeOutputRecord[]> {
+    const records = await this.fetchWithRetry<ThemeOutputRecord['fields']>(
+      AIRTABLE_TABLES.THEME_OUTPUTS,
+      {
+        filterByFormula: `{meeting_id} = '${meetingId}'`,
+      }
+    )
+    return records as unknown as ThemeOutputRecord[]
+  }
+
+  /**
+   * Theme Outputs - Get all outputs for a specific theme in a meeting
+   */
+  async getThemeOutputsForMeetingAndTheme(
+    meetingId: string,
+    themeId: string
+  ): Promise<ThemeOutputRecord[]> {
+    const records = await this.fetchWithRetry<ThemeOutputRecord['fields']>(
+      AIRTABLE_TABLES.THEME_OUTPUTS,
+      {
+        filterByFormula: `AND({meeting_id} = '${meetingId}', {theme_id} = '${themeId}')`,
+      }
+    )
+    return records as unknown as ThemeOutputRecord[]
+  }
+
+  /**
+   * Theme Outputs - Delete all outputs for a meeting (for re-analysis)
+   */
+  async deleteThemeOutputsForMeeting(meetingId: string): Promise<void> {
+    const outputs = await this.getThemeOutputsForMeeting(meetingId)
+    const BATCH_SIZE = 10
+
+    for (let i = 0; i < outputs.length; i += BATCH_SIZE) {
+      const batch = outputs.slice(i, i + BATCH_SIZE)
+      await this.base(AIRTABLE_TABLES.THEME_OUTPUTS).destroy(batch.map(o => o.id))
+    }
+  }
+
+  /**
+   * Email Preferences - Get all email preferences
+   */
+  async getEmailPreferences(): Promise<EmailPreferencesRecord[]> {
+    const records = await this.fetchWithRetry<EmailPreferencesRecord['fields']>(
+      AIRTABLE_TABLES.EMAIL_PREFERENCES,
+      {
+        sort: [{ field: 'Assignee Name', direction: 'asc' }],
+      }
+    )
+    return records.map((record) => ({ id: record.id, fields: record.fields }))
+  }
+
+  /**
+   * Email Preferences - Get preference for a specific assignee
+   */
+  async getEmailPreferenceByAssignee(assigneeName: string): Promise<EmailPreferencesRecord | null> {
+    const records = await this.fetchWithRetry<EmailPreferencesRecord['fields']>(
+      AIRTABLE_TABLES.EMAIL_PREFERENCES,
+      {
+        filterByFormula: `{Assignee Name} = '${assigneeName}'`,
+        maxRecords: 1,
+      }
+    )
+    if (records.length === 0) return null
+    return { id: records[0].id, fields: records[0].fields }
+  }
+
+  /**
+   * Email Preferences - Create or update preference for an assignee
+   */
+  async upsertEmailPreference(
+    assigneeName: string,
+    emailEnabled: boolean,
+    notes?: string
+  ): Promise<EmailPreferencesRecord> {
+    const existing = await this.getEmailPreferenceByAssignee(assigneeName)
+
+    if (existing) {
+      const updateFields: Record<string, unknown> = {
+        'Email Enabled': emailEnabled,
+      }
+      if (notes !== undefined) {
+        updateFields['Notes'] = notes
+      }
+      const record = await this.base(AIRTABLE_TABLES.EMAIL_PREFERENCES).update(existing.id, updateFields)
+      return { id: record.id, fields: record.fields as EmailPreferencesRecord['fields'] }
+    } else {
+      const createFields: Record<string, unknown> = {
+        'Assignee Name': assigneeName,
+        'Email Enabled': emailEnabled,
+      }
+      if (notes !== undefined) {
+        createFields['Notes'] = notes
+      }
+      const record = await this.base(AIRTABLE_TABLES.EMAIL_PREFERENCES).create(createFields)
+      return { id: record.id, fields: record.fields as EmailPreferencesRecord['fields'] }
+    }
+  }
+
+  /**
+   * Email Preferences - Get map of assignee -> emailEnabled for quick lookup
+   * Note: Airtable checkboxes return undefined when unchecked, so we treat undefined as false
+   */
+  async getEmailPreferencesMap(): Promise<Map<string, boolean>> {
+    const prefs = await this.getEmailPreferences()
+    const map = new Map<string, boolean>()
+    for (const pref of prefs) {
+      // Airtable returns undefined for unchecked checkboxes, treat as false
+      const isEnabled = pref.fields['Email Enabled'] === true
+      map.set(pref.fields['Assignee Name'], isEnabled)
+    }
+    return map
+  }
+
+  /**
    * Batch create records (up to 10 at a time per Airtable limits)
    */
   async batchCreate<T extends FieldSet>(
@@ -371,6 +702,77 @@ export class AirtableClient {
    */
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Generic method: Find records in any table
+   */
+  async findRecords<T extends FieldSet>(
+    tableName: string,
+    options?: {
+      filterByFormula?: string
+      sort?: Array<{ field: string; direction: 'asc' | 'desc' }>
+      maxRecords?: number
+    }
+  ): Promise<Array<{ id: string; fields: T }>> {
+    return this.fetchWithRetry<T>(tableName, options) as Promise<Array<{ id: string; fields: T }>>
+  }
+
+  /**
+   * Generic method: Get a single record by ID
+   */
+  async getRecord<T extends FieldSet>(
+    tableName: string,
+    recordId: string
+  ): Promise<{ id: string; fields: T } | null> {
+    try {
+      const record = await this.base(tableName).find(recordId)
+      return {
+        id: record.id,
+        fields: record.fields as T,
+      }
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        return null
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Generic method: Create a record in any table
+   */
+  async createRecord<T extends FieldSet>(
+    tableName: string,
+    fields: Partial<T>
+  ): Promise<{ id: string; fields: T }> {
+    const record = await this.base(tableName).create(fields as FieldSet)
+    return {
+      id: record.id,
+      fields: record.fields as T,
+    }
+  }
+
+  /**
+   * Generic method: Update a record in any table
+   */
+  async updateRecord<T extends FieldSet>(
+    tableName: string,
+    recordId: string,
+    fields: Partial<T>
+  ): Promise<{ id: string; fields: T }> {
+    const record = await this.base(tableName).update(recordId, fields as FieldSet)
+    return {
+      id: record.id,
+      fields: record.fields as T,
+    }
+  }
+
+  /**
+   * Generic method: Delete a record from any table
+   */
+  async deleteRecord(tableName: string, recordId: string): Promise<void> {
+    await this.base(tableName).destroy(recordId)
   }
 }
 

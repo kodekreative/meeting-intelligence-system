@@ -3,7 +3,7 @@
  * Type-safe client for backend API requests
  */
 
-import type { ApiResponse } from 'shared/types'
+import type { ApiResponse, Theme, CreateThemeInput, UpdateThemeInput, TagMeetingInput, TagCompanyInput, ThemeMetrics, ThemeMeeting, ThemeSummary } from './types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 const API_BASE = `${API_URL}/api/v1`
@@ -85,6 +85,12 @@ export const apiClient = {
     },
     get: (id: string) => fetchApi(`/meetings/${id}`),
     today: () => fetchApi('/meetings/filter/today'),
+    analyzeThemes: (id: string) =>
+      fetchApi(`/meetings/${id}/analyze-themes`, {
+        method: 'POST',
+      }),
+    getThemeSummaries: (id: string) =>
+      fetchApi<ThemeSummary[]>(`/meetings/${id}/theme-summaries`),
   },
 
   // Companies
@@ -122,8 +128,70 @@ export const apiClient = {
       }),
   },
 
+  // Email Preferences (for daily email toggles)
+  emailPreferences: {
+    list: () => fetchApi('/action-items/email-preferences'),
+    getMap: () => fetchApi<Record<string, boolean>>('/action-items/email-preferences/map'),
+    upsert: (data: { assigneeName: string; emailEnabled: boolean; notes?: string }) =>
+      fetchApi('/action-items/email-preferences', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
+
   // Dashboard
   dashboard: {
     today: () => fetchApi('/dashboard/today'),
+  },
+
+  // Themes
+  themes: {
+    list: (params?: { companyId?: string; isActive?: boolean }) => {
+      const query = params ? new URLSearchParams(
+        Object.entries(params).reduce((acc, [key, val]) => ({ ...acc, [key]: String(val) }), {})
+      ) : ''
+      return fetchApi<Theme[]>(`/themes${query ? `?${query}` : ''}`)
+    },
+    get: (id: string) => fetchApi<Theme>(`/themes/${id}`),
+    create: (data: CreateThemeInput) =>
+      fetchApi<Theme>('/themes', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: UpdateThemeInput) =>
+      fetchApi<Theme>(`/themes/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi<{ success: boolean; message: string }>(`/themes/${id}`, {
+        method: 'DELETE',
+      }),
+    tag: (data: TagMeetingInput) =>
+      fetchApi('/themes/tag', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    untag: (meetingId: string, themeId: string) =>
+      fetchApi('/themes/untag', {
+        method: 'DELETE',
+        body: JSON.stringify({ meetingId, themeId }),
+      }),
+    tagCompany: (data: TagCompanyInput) =>
+      fetchApi('/themes/tag-company', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    untagCompany: (companyId: string, themeId: string) =>
+      fetchApi('/themes/untag-company', {
+        method: 'DELETE',
+        body: JSON.stringify({ companyId, themeId }),
+      }),
+    getCompanies: (themeId: string) =>
+      fetchApi(`/themes/${themeId}/companies`),
+    getMeetings: (themeId: string) =>
+      fetchApi<ThemeMeeting[]>(`/themes/${themeId}/meetings`),
+    getMetrics: (themeId: string) =>
+      fetchApi<ThemeMetrics>(`/themes/${themeId}/metrics`),
   },
 }

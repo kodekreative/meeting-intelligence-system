@@ -14,7 +14,7 @@ interface OrbitalElementProps {
   meeting: Meeting
   index: number
   total: number
-  onClick: (id: string) => void
+  onClick: (title: string) => void
 }
 
 function OrbitalElement({ meeting, index, total, onClick }: OrbitalElementProps) {
@@ -51,12 +51,13 @@ function OrbitalElement({ meeting, index, total, onClick }: OrbitalElementProps)
         animationDelay: `-${(angleOffset / 360) * animationDuration}s`,
         ['--radius' as string]: `${ring.radius}px`,
         ['--duration' as string]: `${animationDuration}s`,
+        zIndex: 100 + index, // Ensure all elements are clickable
       }}
     >
       <button
-        onClick={() => onClick(meeting.id)}
-        className="orbital-text text-white/70 hover:text-white transition-all duration-300 cursor-pointer whitespace-nowrap hover:scale-110 font-light"
-        style={{ fontSize }}
+        onClick={() => onClick(meeting.title)}
+        className="orbital-text text-white/70 hover:text-white transition-all duration-300 cursor-pointer whitespace-nowrap hover:scale-110 font-light relative"
+        style={{ fontSize, zIndex: 1 }}
       >
         {meeting.title}
       </button>
@@ -109,8 +110,9 @@ export function OrbitalSystem() {
     fetchMeetings()
   }, [])
 
-  const handleMeetingClick = (id: string) => {
-    router.push(`/meetings/${id}`)
+  const handleMeetingClick = (title: string) => {
+    // Navigate to companies page (Meeting Titles) with the title as a filter
+    router.push(`/companies?title=${encodeURIComponent(title)}`)
   }
 
   const handleEnterDashboard = () => {
@@ -154,9 +156,9 @@ export function OrbitalSystem() {
 
         {/* Subtle rings visualization */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] border border-white/5 rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] border border-white/5 rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[760px] h-[760px] border border-white/5 rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] border border-white/20 rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] border border-white/15 rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[760px] h-[760px] border border-white/10 rounded-full" />
         </div>
       </div>
 

@@ -154,6 +154,25 @@ export const updateActionItemSchema = z.object({
   status: actionItemStatusSchema.optional(),
   priority: actionItemPrioritySchema.optional(),
   notes: z.string().optional(),
+  includeInDailyEmail: z.boolean().optional(), // Toggle for daily email inclusion
+})
+
+/**
+ * Email Preferences Schemas
+ */
+export const emailPreferenceSchema = z.object({
+  id: z.string(),
+  assigneeName: z.string().min(1),
+  emailEnabled: z.boolean(),
+  notes: z.string().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const upsertEmailPreferenceSchema = z.object({
+  assigneeName: z.string().min(1, 'Assignee name is required'),
+  emailEnabled: z.boolean(),
+  notes: z.string().optional(),
 })
 
 /**
@@ -244,4 +263,109 @@ export const filterByStatusSchema = z.object({
 
 export const filterByCompanySchema = z.object({
   companyId: z.string().optional(),
+})
+
+/**
+ * Theme Schemas
+ */
+export const themeSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  colorCode: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color code (e.g., #FF5733)'),
+  icon: z.string().optional(),
+  companyId: z.string(),
+  isActive: z.boolean().default(true),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const createThemeSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be 100 characters or less'),
+  description: z.string().max(500, 'Description must be 500 characters or less').optional(),
+  colorCode: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color code (e.g., #FF5733)'),
+  icon: z.string().optional(),
+  companyId: z.string().min(1, 'Company ID is required'),
+})
+
+export const updateThemeSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be 100 characters or less').optional(),
+  description: z.string().max(500, 'Description must be 500 characters or less').optional(),
+  colorCode: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color code (e.g., #FF5733)').optional(),
+  icon: z.string().optional(),
+  isActive: z.boolean().optional(),
+})
+
+export const meetingThemeSchema = z.object({
+  id: z.string(),
+  meetingId: z.string(),
+  themeId: z.string(),
+  notes: z.string().max(1000).optional(),
+  createdAt: z.date(),
+  createdBy: z.string(),
+})
+
+export const createMeetingThemeSchema = z.object({
+  meetingId: z.string().min(1, 'Meeting ID is required'),
+  themeId: z.string().min(1, 'Theme ID is required'),
+  notes: z.string().max(1000, 'Notes must be 1000 characters or less').optional(),
+  createdBy: z.string().min(1, 'Created by is required'),
+})
+
+export const tagMeetingSchema = z.object({
+  meetingId: z.string().min(1, 'Meeting ID is required'),
+  themeIds: z.array(z.string().min(1)).min(1, 'At least one theme ID is required'),
+  notes: z.string().max(1000).optional(),
+  createdBy: z.string().min(1, 'Created by is required'),
+})
+
+export const untagMeetingSchema = z.object({
+  meetingId: z.string().min(1, 'Meeting ID is required'),
+  themeId: z.string().min(1, 'Theme ID is required'),
+})
+
+/**
+ * Theme Analysis Schemas
+ */
+export const themeMetricsSchema = z.object({
+  themeId: z.string(),
+  themeName: z.string(),
+  colorCode: z.string(),
+  icon: z.string().optional(),
+  meetingCount: z.number().int().nonnegative(),
+  actionItemCount: z.number().int().nonnegative(),
+  issueCount: z.number().int().nonnegative(),
+  lastDiscussedAt: z.date().optional(),
+  createdAt: z.date(),
+})
+
+export const themeMeetingsSummarySchema = z.object({
+  themeId: z.string(),
+  themeName: z.string(),
+  meetings: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      startTime: z.date(),
+      participants: z.array(z.string()),
+      notes: z.string().optional(),
+    })
+  ),
+  actionItems: z.array(
+    z.object({
+      id: z.string(),
+      taskDescription: z.string(),
+      assignee: z.string().optional(),
+      status: actionItemStatusSchema,
+      priority: actionItemPrioritySchema,
+    })
+  ),
+  businessIssues: z.array(
+    z.object({
+      id: z.string(),
+      issueDescription: z.string(),
+      severity: issueSeveritySchema,
+      status: issueStatusSchema,
+    })
+  ),
 })

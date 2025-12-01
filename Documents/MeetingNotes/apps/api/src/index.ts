@@ -14,16 +14,20 @@ import { errorHandler } from './middleware/errorHandler.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { initializeAirtable } from './lib/client.js'
 import { initializeRedis } from './utils/redis.js'
+import { schedulerService } from './services/scheduler.service.js'
 
 // Import routes
 import healthRouter from './routes/health.js'
 import authRouter from './routes/auth.js'
+import calendarRouter from './routes/calendar.routes.js'
+import icalendarRouter from './routes/icalendar.routes.js'
 import meetingsRouter from './routes/meetings.js'
 import companiesRouter from './routes/companies.js'
 import contactsRouter from './routes/contacts.js'
 import actionItemsRouter from './routes/actionItems.js'
 import dashboardRouter from './routes/dashboard.js'
 import emailRouter from './routes/email.routes.js'
+import themesRouter from './routes/themes.js'
 
 // Load environment variables from root
 dotenv.config({ path: '../../.env' })
@@ -66,17 +70,18 @@ async function initializeServices(): Promise<void> {
  * Configure middleware
  */
 function configureMiddleware(app: Express): void {
-  // Security middleware
-  app.use(helmet())
-
-  // CORS configuration
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
+  // CORS configuration - must be before helmet
   app.use(
     cors({
-      origin: allowedOrigins,
+      origin: true, // Allow all origins in development
       credentials: true,
     })
   )
+
+  // Security middleware - configure to allow cross-origin requests
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }))
 
   // Compression
   app.use(compression())
@@ -100,12 +105,15 @@ function configureRoutes(app: Express): void {
 
   // API routes
   app.use(`${API_PREFIX}/auth`, authRouter)
+  app.use(`${API_PREFIX}/calendar`, calendarRouter)
+  app.use(`${API_PREFIX}/icalendar`, icalendarRouter)
   app.use(`${API_PREFIX}/meetings`, meetingsRouter)
   app.use(`${API_PREFIX}/companies`, companiesRouter)
   app.use(`${API_PREFIX}/contacts`, contactsRouter)
   app.use(`${API_PREFIX}/action-items`, actionItemsRouter)
   app.use(`${API_PREFIX}/dashboard`, dashboardRouter)
   app.use(`${API_PREFIX}/email`, emailRouter)
+  app.use(`${API_PREFIX}/themes`, themesRouter)
 
   // 404 handler
   app.use('*', (req, res) => {
@@ -150,11 +158,20 @@ API Base: /api/v1
 Health Check: http://localhost:${PORT}/health
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       `)
+
+      // Initialize scheduled jobs
+      if (process.env.ENABLE_SCHEDULED_JOBS !== 'false') {
+        schedulerService.initialize()
+      }
     })
 
     // Graceful shutdown
     const gracefulShutdown = (signal: string): void => {
       logger.info(`${signal} received, starting graceful shutdown...`)
+
+      // Stop scheduled jobs
+      schedulerService.shutdown()
+
       server.close(() => {
         logger.info('HTTP server closed')
         process.exit(0)
