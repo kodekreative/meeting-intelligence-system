@@ -404,6 +404,7 @@ export const createTaskSchema = z.object({
   status: taskStatusSchema.default('Backlog'),
   priority: taskPrioritySchema.default('Medium'),
   assigneeId: z.string().optional(),
+  assigneeName: z.string().max(200, 'Assignee name must be 200 characters or less').optional(),
   dueDate: z.string().optional(),
   companyId: z.string().optional(),
   source: taskSourceSchema.default('Manual'),

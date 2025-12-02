@@ -8,7 +8,7 @@ import { TaskKanban } from './components/task-kanban'
 import { TaskGroupedList } from './components/task-grouped-list'
 import { TaskNestedGroupedList } from './components/task-nested-grouped-list'
 import { TaskBoardView } from './components/task-board-view'
-import { CreateTaskModal } from './components/create-task-modal'
+import { CreateTaskModal, User, Meeting } from './components/create-task-modal'
 import { TaskDetailModal } from './components/task-detail-modal'
 import { MultiSelectDropdown } from './components/multi-select-dropdown'
 
@@ -156,6 +156,32 @@ export default function TasksPage() {
     queryKey: ['tasks'],
     queryFn: () => apiClient.tasks.list(),
   })
+
+  // Fetch users for assignee dropdown
+  const { data: usersData, error: usersError } = useQuery({
+    queryKey: ['tasks-users'],
+    queryFn: async () => {
+      const result = await apiClient.tasks.getUsers()
+      console.log('Users API result:', result)
+      return result
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Log users error if any
+  if (usersError) {
+    console.error('Users fetch error:', usersError)
+  }
+
+  // Fetch meetings for linking dropdown
+  const { data: meetingsData } = useQuery({
+    queryKey: ['tasks-meetings'],
+    queryFn: () => apiClient.tasks.getMeetings(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+
+  const users = useMemo(() => (usersData?.data || []) as User[], [usersData])
+  const meetings = useMemo(() => (meetingsData?.data || []) as Meeting[], [meetingsData])
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, ...updates }: { id: string; [key: string]: any }) =>
@@ -711,6 +737,8 @@ export default function TasksPage() {
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateTask}
           isLoading={createTaskMutation.isPending}
+          users={users}
+          meetings={meetings}
         />
       )}
 

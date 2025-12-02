@@ -272,6 +272,214 @@ router.get(
 )
 
 /**
+ * GET /api/v1/tasks/users
+ * Get all assignees for selection - combines Users table + unique assignee names from tasks
+ * NOTE: This must be defined BEFORE /:id route to avoid being caught by it
+ */
+router.get(
+  '/users',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const cacheKey = `${CACHE.KEYS.TASKS}:users`
+
+    const cached = await cacheGet(cacheKey)
+    if (cached) {
+      res.json({
+        success: true,
+        data: cached,
+        meta: { cached: true },
+      })
+      return
+    }
+
+    const base = getBase()
+
+    // Get users from Users table
+    const userRecords = await base(AIRTABLE_TABLES.USERS)
+      .select({
+        filterByFormula: '{Is Active} = TRUE()',
+        sort: [{ field: 'Full Name', direction: 'asc' }],
+      })
+      .all()
+
+    const usersFromTable = userRecords
+      .filter(record => record.get('Full Name'))
+      .map((record) => ({
+        id: record.id,
+        fullName: record.get('Full Name') as string,
+        email: record.get('Email') as string || '',
+        source: 'user' as const,
+      }))
+
+    // Get unique assignee names from existing tasks
+    const taskRecords = await base(AIRTABLE_TABLES.TASKS)
+      .select({
+        fields: ['Assignee Name'],
+      })
+      .all()
+
+    const assigneeNamesFromTasks = new Set<string>()
+    taskRecords.forEach(record => {
+      const name = record.get('Assignee Name') as string
+      if (name && name.trim()) {
+        assigneeNamesFromTasks.add(name.trim())
+      }
+    })
+
+    // Also get from Action Items table
+    const actionItemRecords = await base(AIRTABLE_TABLES.ACTION_ITEMS)
+      .select({
+        fields: ['Assignee'],
+      })
+      .all()
+
+    actionItemRecords.forEach(record => {
+      const name = record.get('Assignee') as string
+      if (name && name.trim()) {
+        assigneeNamesFromTasks.add(name.trim())
+      }
+    })
+
+    // Create set of existing user names (lowercase) to avoid duplicates
+    const existingUserNames = new Set(
+      usersFromTable.map(u => u.fullName.toLowerCase())
+    )
+
+    // Helper to resolve partial names to full names using NAME_MAPPING
+    const resolveFullName = (name: string): string => {
+      const nameLower = name.toLowerCase()
+      // Check if it's already a full name (has space)
+      if (name.includes(' ')) return name
+      // Try to map partial name to full name
+      return NAME_MAPPING[nameLower] || name
+    }
+
+    // Add task assignees that aren't already in the users table
+    // Convert partial names (like "Collopy") to full names (like "Tim Collopy")
+    const resolvedNames = new Map<string, string>() // lowercase -> resolved name
+    Array.from(assigneeNamesFromTasks).forEach(name => {
+      const fullName = resolveFullName(name)
+      const key = fullName.toLowerCase()
+      // Only add if not already in users table and not a duplicate
+      if (!existingUserNames.has(key) && !resolvedNames.has(key)) {
+        resolvedNames.set(key, fullName)
+      }
+    })
+
+    const assigneesFromTasks = Array.from(resolvedNames.values())
+      .map(name => ({
+        id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}`,
+        fullName: name,
+        email: '',
+        source: 'task' as const,
+      }))
+
+    // Combine and sort
+    const allUsers = [...usersFromTable, ...assigneesFromTasks]
+      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+
+    await cacheSet(cacheKey, allUsers, CACHE.TTL.MEDIUM)
+
+    res.json({
+      success: true,
+      data: allUsers,
+      meta: { cached: false },
+    })
+  })
+)
+
+/**
+ * GET /api/v1/tasks/meetings
+ * Get recent meetings for linking tasks
+ * NOTE: This must be defined BEFORE /:id route to avoid being caught by it
+ */
+router.get(
+  '/meetings',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const cacheKey = `${CACHE.KEYS.TASKS}:meetings`
+
+    const cached = await cacheGet(cacheKey)
+    if (cached) {
+      res.json({
+        success: true,
+        data: cached,
+        meta: { cached: true },
+      })
+      return
+    }
+
+    const base = getBase()
+    const records = await base(AIRTABLE_TABLES.MEETINGS)
+      .select({
+        sort: [{ field: 'Start Time', direction: 'desc' }],
+        maxRecords: 100,
+      })
+      .all()
+
+    const meetings = records.map((record) => ({
+      id: record.id,
+      title: record.get('Title') as string || record.get('Name') as string || 'Untitled Meeting',
+      startTime: record.get('Start Time') as string,
+    }))
+
+    await cacheSet(cacheKey, meetings, CACHE.TTL.SHORT)
+
+    res.json({
+      success: true,
+      data: meetings,
+      meta: { cached: false },
+    })
+  })
+)
+
+/**
+ * GET /api/v1/tasks/stats/by-status
+ * Get task counts grouped by status
+ * NOTE: This must be defined BEFORE /:id route to avoid being caught by it
+ */
+router.get(
+  '/stats/by-status',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const cacheKey = `${CACHE.KEYS.TASKS}:stats:by-status`
+
+    const cached = await cacheGet(cacheKey)
+    if (cached) {
+      res.json({
+        success: true,
+        data: cached,
+        meta: { cached: true },
+      })
+      return
+    }
+
+    const base = getBase()
+    const records = await base(AIRTABLE_TABLES.TASKS).select().all()
+
+    const stats = {
+      [TASKS.STATUS.BACKLOG]: 0,
+      [TASKS.STATUS.IN_PROGRESS]: 0,
+      [TASKS.STATUS.BLOCKED]: 0,
+      [TASKS.STATUS.DONE]: 0,
+      total: records.length,
+    }
+
+    records.forEach((record) => {
+      const status = record.get('Status') as string
+      if (status in stats) {
+        stats[status as keyof typeof stats]++
+      }
+    })
+
+    await cacheSet(cacheKey, stats, CACHE.TTL.SHORT)
+
+    res.json({
+      success: true,
+      data: stats,
+      meta: { cached: false },
+    })
+  })
+)
+
+/**
  * GET /api/v1/tasks/:id
  * Get a single task by ID
  */
@@ -386,6 +594,10 @@ router.post(
     if (validatedData.assigneeId) {
       fields['Assignee'] = [validatedData.assigneeId]
     }
+    // Support custom assignee name (when not linking to a User record)
+    if (validatedData.assigneeName && !validatedData.assigneeId) {
+      fields['Assignee Name'] = validatedData.assigneeName
+    }
     if (validatedData.dueDate) {
       fields['Due Date'] = validatedData.dueDate
     }
@@ -406,6 +618,34 @@ router.post(
     // Invalidate cache
     await cacheDeletePattern(`${CACHE.KEYS.TASKS}:*`)
 
+    // Resolve assignee name
+    let assigneeName: string | undefined
+    if (validatedData.assigneeId) {
+      // Linked to a User record - fetch the full name
+      try {
+        const userRecord = await base(AIRTABLE_TABLES.USERS).find(validatedData.assigneeId)
+        assigneeName = userRecord.get('Full Name') as string
+      } catch {
+        // Fallback to lookup field if user fetch fails
+        assigneeName = record.get('Assignee Name') as string | undefined
+      }
+    } else if (validatedData.assigneeName) {
+      // Custom name provided directly
+      assigneeName = validatedData.assigneeName
+    }
+
+    // Resolve meeting title if meeting was linked
+    let sourceMeetingTitle: string | undefined
+    if (validatedData.sourceMeetingId) {
+      try {
+        const meetingRecord = await base(AIRTABLE_TABLES.MEETINGS).find(validatedData.sourceMeetingId)
+        sourceMeetingTitle = (meetingRecord.get('Title') as string) || (meetingRecord.get('Name') as string) || 'Untitled Meeting'
+      } catch {
+        // Fallback to lookup field if meeting fetch fails
+        sourceMeetingTitle = record.get('Source Meeting Title') as string | undefined
+      }
+    }
+
     const task = {
       id: record.id,
       name: record.get('Name') as string,
@@ -413,11 +653,13 @@ router.post(
       status: record.get('Status') as string,
       priority: record.get('Priority') as string,
       assigneeId: (record.get('Assignee') as string[] | undefined)?.[0],
+      assigneeName,
       dueDate: record.get('Due Date') as string | undefined,
       companyId: (record.get('Company') as string[] | undefined)?.[0],
       source: record.get('Source') as string,
       sourceActionItemId: record.get('Source Action Item ID') as string | undefined,
       sourceMeetingId: record.get('Source Meeting ID') as string | undefined,
+      sourceMeetingTitle,
       completedDate: record.get('Completed Date') as string | undefined,
     }
 
@@ -537,53 +779,6 @@ router.delete(
       }
       throw error
     }
-  })
-)
-
-/**
- * GET /api/v1/tasks/stats/by-status
- * Get task counts grouped by status
- */
-router.get(
-  '/stats/by-status',
-  asyncHandler(async (req: Request, res: Response) => {
-    const cacheKey = `${CACHE.KEYS.TASKS}:stats:by-status`
-
-    const cached = await cacheGet(cacheKey)
-    if (cached) {
-      res.json({
-        success: true,
-        data: cached,
-        meta: { cached: true },
-      })
-      return
-    }
-
-    const base = getBase()
-    const records = await base(AIRTABLE_TABLES.TASKS).select().all()
-
-    const stats = {
-      [TASKS.STATUS.BACKLOG]: 0,
-      [TASKS.STATUS.IN_PROGRESS]: 0,
-      [TASKS.STATUS.BLOCKED]: 0,
-      [TASKS.STATUS.DONE]: 0,
-      total: records.length,
-    }
-
-    records.forEach((record) => {
-      const status = record.get('Status') as string
-      if (status in stats) {
-        stats[status as keyof typeof stats]++
-      }
-    })
-
-    await cacheSet(cacheKey, stats, CACHE.TTL.SHORT)
-
-    res.json({
-      success: true,
-      data: stats,
-      meta: { cached: false },
-    })
   })
 )
 

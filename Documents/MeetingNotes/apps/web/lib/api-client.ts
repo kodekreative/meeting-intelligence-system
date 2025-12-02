@@ -219,6 +219,7 @@ export const apiClient = {
       status?: string
       priority?: string
       assigneeId?: string
+      assigneeName?: string
       dueDate?: string
       companyId?: string
       source?: string
@@ -248,6 +249,8 @@ export const apiClient = {
         method: 'DELETE',
       }),
     statsByStatus: () => fetchApi('/tasks/stats/by-status'),
+    getUsers: () => fetchApi<{ id: string; fullName: string; email: string }[]>('/tasks/users'),
+    getMeetings: () => fetchApi<{ id: string; title: string; startTime: string }[]>('/tasks/meetings'),
   },
 
   // Task Stacks (for hierarchical task organization)
