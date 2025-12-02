@@ -28,6 +28,9 @@ import actionItemsRouter from './routes/actionItems.js'
 import dashboardRouter from './routes/dashboard.js'
 import emailRouter from './routes/email.routes.js'
 import themesRouter from './routes/themes.js'
+import tasksRouter from './routes/tasks.js'
+import stacksRouter from './routes/stacks.js'
+import boardsRouter from './routes/boards.js'
 
 // Load environment variables from root
 dotenv.config({ path: '../../.env' })
@@ -114,6 +117,9 @@ function configureRoutes(app: Express): void {
   app.use(`${API_PREFIX}/dashboard`, dashboardRouter)
   app.use(`${API_PREFIX}/email`, emailRouter)
   app.use(`${API_PREFIX}/themes`, themesRouter)
+  app.use(`${API_PREFIX}/tasks`, tasksRouter)
+  app.use(`${API_PREFIX}/stacks`, stacksRouter)
+  app.use(`${API_PREFIX}/boards`, boardsRouter)
 
   // 404 handler
   app.use('*', (req, res) => {

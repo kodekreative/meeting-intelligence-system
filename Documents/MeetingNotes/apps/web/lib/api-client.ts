@@ -194,4 +194,153 @@ export const apiClient = {
     getMetrics: (themeId: string) =>
       fetchApi<ThemeMetrics>(`/themes/${themeId}/metrics`),
   },
+
+  // Tasks
+  tasks: {
+    list: (params?: {
+      status?: string
+      priority?: string
+      assigneeId?: string
+      companyId?: string
+      source?: string
+      search?: string
+    }) => {
+      const query = params ? new URLSearchParams(
+        Object.entries(params)
+          .filter(([_, val]) => val !== undefined && val !== '')
+          .reduce((acc, [key, val]) => ({ ...acc, [key]: String(val) }), {})
+      ) : ''
+      return fetchApi(`/tasks${query ? `?${query}` : ''}`)
+    },
+    get: (id: string) => fetchApi(`/tasks/${id}`),
+    create: (data: {
+      name: string
+      description?: string
+      status?: string
+      priority?: string
+      assigneeId?: string
+      dueDate?: string
+      companyId?: string
+      source?: string
+      sourceActionItemId?: string
+      sourceMeetingId?: string
+    }) =>
+      fetchApi('/tasks', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: {
+      name?: string
+      description?: string
+      status?: string
+      priority?: string
+      assigneeId?: string | null
+      dueDate?: string | null
+      companyId?: string | null
+      completedDate?: string | null
+    }) =>
+      fetchApi(`/tasks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi(`/tasks/${id}`, {
+        method: 'DELETE',
+      }),
+    statsByStatus: () => fetchApi('/tasks/stats/by-status'),
+  },
+
+  // Task Stacks (for hierarchical task organization)
+  stacks: {
+    list: (params?: { boardId?: string }) => {
+      const query = params?.boardId ? `?boardId=${params.boardId}` : ''
+      return fetchApi(`/stacks${query}`)
+    },
+    get: (id: string) => fetchApi(`/stacks/${id}`),
+    create: (data: {
+      name: string
+      type?: 'Assignee' | 'Meeting' | 'Custom'
+      parentStackId?: string
+      order?: number
+      color?: string
+      isCollapsed?: boolean
+      ownerId?: string
+      boardId?: string
+    }) =>
+      fetchApi('/stacks', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: {
+      name?: string
+      type?: 'Assignee' | 'Meeting' | 'Custom'
+      parentStackId?: string
+      order?: number
+      color?: string
+      isCollapsed?: boolean
+      ownerId?: string
+      boardId?: string
+    }) =>
+      fetchApi(`/stacks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi(`/stacks/${id}`, {
+        method: 'DELETE',
+      }),
+    bulkUpdate: (updates: { id: string; order?: number; parentStackId?: string }[]) =>
+      fetchApi('/stacks/bulk-update', {
+        method: 'POST',
+        body: JSON.stringify({ updates }),
+      }),
+    assignTask: (taskId: string, stackId: string | null, stackOrder?: number) =>
+      fetchApi('/stacks/assign-task', {
+        method: 'POST',
+        body: JSON.stringify({ taskId, stackId, stackOrder }),
+      }),
+    bulkAssignTasks: (assignments: { taskId: string; stackId?: string; stackOrder?: number }[]) =>
+      fetchApi('/stacks/bulk-assign-tasks', {
+        method: 'POST',
+        body: JSON.stringify({ assignments }),
+      }),
+    autoGenerate: (type: 'assignee' | 'meeting') =>
+      fetchApi('/stacks/auto-generate', {
+        method: 'POST',
+        body: JSON.stringify({ type }),
+      }),
+  },
+
+  // Task Boards (for organizing stacks into boards like "Work", "Personal")
+  boards: {
+    list: () => fetchApi('/boards'),
+    get: (id: string) => fetchApi(`/boards/${id}`),
+    create: (data: {
+      name: string
+      description?: string
+      order?: number
+      ownerId?: string
+      isDefault?: boolean
+    }) =>
+      fetchApi('/boards', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: {
+      name?: string
+      description?: string
+      order?: number
+      ownerId?: string
+      isDefault?: boolean
+    }) =>
+      fetchApi(`/boards/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi(`/boards/${id}`, {
+        method: 'DELETE',
+      }),
+    getLists: (boardId: string) => fetchApi(`/boards/${boardId}/lists`),
+  },
 }

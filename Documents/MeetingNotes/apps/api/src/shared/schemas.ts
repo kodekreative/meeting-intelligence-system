@@ -369,3 +369,55 @@ export const themeMeetingsSummarySchema = z.object({
     })
   ),
 })
+
+/**
+ * Task Schemas
+ */
+export const taskStatusSchema = z.enum(['Backlog', 'In Progress', 'Blocked', 'Done'])
+
+export const taskPrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical'])
+
+export const taskSourceSchema = z.enum(['Action Item', 'Manual'])
+
+export const taskSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  status: taskStatusSchema,
+  priority: taskPrioritySchema,
+  assigneeId: z.string().optional(),
+  assigneeName: z.string().optional(),
+  dueDate: z.string().optional(),
+  companyId: z.string().optional(),
+  companyName: z.string().optional(),
+  source: taskSourceSchema,
+  sourceActionItemId: z.string().optional(),
+  sourceMeetingId: z.string().optional(),
+  completedDate: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+})
+
+export const createTaskSchema = z.object({
+  name: z.string().min(1, 'Task name is required').max(500, 'Name must be 500 characters or less'),
+  description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
+  status: taskStatusSchema.default('Backlog'),
+  priority: taskPrioritySchema.default('Medium'),
+  assigneeId: z.string().optional(),
+  dueDate: z.string().optional(),
+  companyId: z.string().optional(),
+  source: taskSourceSchema.default('Manual'),
+  sourceActionItemId: z.string().optional(),
+  sourceMeetingId: z.string().optional(),
+})
+
+export const updateTaskSchema = z.object({
+  name: z.string().min(1).max(500).optional(),
+  description: z.string().max(5000).optional(),
+  status: taskStatusSchema.optional(),
+  priority: taskPrioritySchema.optional(),
+  assigneeId: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable(),
+  companyId: z.string().optional().nullable(),
+  completedDate: z.string().optional().nullable(),
+})

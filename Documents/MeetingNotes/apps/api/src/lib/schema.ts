@@ -19,6 +19,7 @@ export const AIRTABLE_TABLES = {
   THEME_OUTPUTS: 'theme_outputs',
   CALENDAR_EVENTS: 'Calendar Events',
   EMAIL_PREFERENCES: 'Email Preferences',
+  TASKS: 'Tasks',
 } as const
 
 /**
@@ -289,6 +290,27 @@ export interface EmailPreferencesRecord {
 }
 
 /**
+ * Tasks Table
+ * Unified task storage for action items and manual tasks
+ */
+export interface TaskRecord {
+  id: string
+  fields: {
+    'Name': string // Task title
+    'Description'?: string // Task details and notes
+    'Status': 'Backlog' | 'In Progress' | 'Blocked' | 'Done'
+    'Priority': 'Low' | 'Medium' | 'High' | 'Critical'
+    'Assignee'?: string[] // Link to Users table
+    'Due Date'?: string // ISO date
+    'Company'?: string[] // Link to Companies table
+    'Source': 'Action Item' | 'Manual'
+    'Source Action Item ID'?: string // ID of originating action item
+    'Source Meeting ID'?: string // ID of originating meeting
+    'Completed Date'?: string // ISO date when marked Done
+  }
+}
+
+/**
  * Type union of all record types for type safety
  */
 export type AirtableRecord =
@@ -304,6 +326,7 @@ export type AirtableRecord =
   | ThemeOutputRecord
   | CalendarEventRecord
   | EmailPreferencesRecord
+  | TaskRecord
 
 /**
  * Field name mappings for easier access
@@ -429,5 +452,18 @@ export const FIELD_NAMES = {
     MEETING_URL: 'Meeting URL',
     USER: 'User',
     LAST_SYNCED: 'Last Synced',
+  },
+  TASKS: {
+    NAME: 'Name',
+    DESCRIPTION: 'Description',
+    STATUS: 'Status',
+    PRIORITY: 'Priority',
+    ASSIGNEE: 'Assignee',
+    DUE_DATE: 'Due Date',
+    COMPANY: 'Company',
+    SOURCE: 'Source',
+    SOURCE_ACTION_ITEM_ID: 'Source Action Item ID',
+    SOURCE_MEETING_ID: 'Source Meeting ID',
+    COMPLETED_DATE: 'Completed Date',
   },
 } as const

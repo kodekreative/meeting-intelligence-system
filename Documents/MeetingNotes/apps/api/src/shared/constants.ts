@@ -30,6 +30,10 @@ export const CACHE = {
     CONTACTS: 'contacts',
     ACTION_ITEMS: 'action_items',
     DASHBOARD: 'dashboard',
+    THEMES: 'themes',
+    MEETING_THEMES: 'meeting_themes',
+    THEME_METRICS: 'theme_metrics',
+    TASKS: 'tasks',
   },
 } as const
 
@@ -67,6 +71,28 @@ export const ACTION_ITEMS = {
     MEDIUM: 'Medium',
     HIGH: 'High',
     CRITICAL: 'Critical',
+  },
+} as const
+
+/**
+ * Task Configuration
+ */
+export const TASKS = {
+  STATUS: {
+    BACKLOG: 'Backlog',
+    IN_PROGRESS: 'In Progress',
+    BLOCKED: 'Blocked',
+    DONE: 'Done',
+  },
+  PRIORITY: {
+    LOW: 'Low',
+    MEDIUM: 'Medium',
+    HIGH: 'High',
+    CRITICAL: 'Critical',
+  },
+  SOURCE: {
+    ACTION_ITEM: 'Action Item',
+    MANUAL: 'Manual',
   },
 } as const
 
