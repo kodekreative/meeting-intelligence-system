@@ -3,6 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Task } from '../page'
+import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskCardProps {
   task: Task
@@ -29,13 +30,13 @@ const getPriorityColor = (priority: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Done':
+    case 'Completed':
       return 'text-green-600'
     case 'In Progress':
       return 'text-blue-600'
     case 'Blocked':
       return 'text-red-600'
-    case 'Backlog':
+    case 'Open':
     default:
       return 'text-gray-500'
   }
@@ -73,17 +74,18 @@ export function TaskCard({ task, onStatusChange, onClick, compact, isDragging }:
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={task.status === 'Done'}
+            checked={task.status === 'Completed'}
             onChange={(e) => {
               e.stopPropagation()
-              onStatusChange(task.id, e.target.checked ? 'Done' : 'Backlog')
+              onStatusChange(task.id, e.target.checked ? 'Completed' : 'Open')
             }}
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
-            className="w-3 h-3 text-blue-600 border-gray-300 rounded"
+            className="w-3 h-3 text-blue-600 border-gray-300 rounded cursor-pointer"
           />
           <span
             className={`text-[11px] flex-1 truncate cursor-pointer ${
-              task.status === 'Done' ? 'line-through text-gray-400' : 'text-gray-900'
+              task.status === 'Completed' ? 'line-through text-gray-400' : 'text-gray-900'
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -119,18 +121,19 @@ export function TaskCard({ task, onStatusChange, onClick, compact, isDragging }:
       <div className="flex items-start gap-2">
         <input
           type="checkbox"
-          checked={task.status === 'Done'}
+          checked={task.status === 'Completed'}
           onChange={(e) => {
             e.stopPropagation()
-            onStatusChange(task.id, e.target.checked ? 'Done' : 'Backlog')
+            onStatusChange(task.id, e.target.checked ? 'Completed' : 'Open')
           }}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
-          className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded mt-0.5"
+          className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded mt-0.5 cursor-pointer"
         />
         <div className="flex-1 min-w-0">
           <div
             className={`text-xs font-medium cursor-pointer hover:text-blue-600 ${
-              task.status === 'Done' ? 'line-through text-gray-400' : 'text-gray-900'
+              task.status === 'Completed' ? 'line-through text-gray-400' : 'text-gray-900'
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -139,9 +142,9 @@ export function TaskCard({ task, onStatusChange, onClick, compact, isDragging }:
           >
             {task.name}
           </div>
-          {task.description && (
+          {getMeaningfulDescription(task.description) && (
             <div className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">
-              {task.description}
+              {getMeaningfulDescription(task.description)}
             </div>
           )}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -154,13 +157,14 @@ export function TaskCard({ task, onStatusChange, onClick, compact, isDragging }:
                 e.stopPropagation()
                 onStatusChange(task.id, e.target.value as Task['status'])
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
               className={`text-[10px] border-0 bg-transparent ${getStatusColor(task.status)} cursor-pointer`}
             >
-              <option value="Backlog">Backlog</option>
+              <option value="Open">Open</option>
               <option value="In Progress">In Progress</option>
               <option value="Blocked">Blocked</option>
-              <option value="Done">Done</option>
+              <option value="Completed">Completed</option>
             </select>
             {task.assigneeName && (
               <span className="text-[10px] text-gray-500">

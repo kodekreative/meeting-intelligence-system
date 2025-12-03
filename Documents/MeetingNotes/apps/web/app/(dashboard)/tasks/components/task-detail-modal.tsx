@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import type { Task } from '../page'
 import Link from 'next/link'
+import { renderHighlightedText, hasHighlightedContent, stripHighlightMarkers } from '../utils/highlight-text'
 
 interface TaskDetailModalProps {
   task: Task
@@ -28,6 +29,10 @@ export function TaskDetailModal({
   const [dueDate, setDueDate] = useState(task.dueDate || '')
   const [hasChanges, setHasChanges] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isEditingTranscript, setIsEditingTranscript] = useState(false)
+
+  // Check if description contains transcript context (has highlight markers)
+  const isTranscriptContext = hasHighlightedContent(task.description)
 
   useEffect(() => {
     const changed =
@@ -59,7 +64,7 @@ export function TaskDetailModal({
 
   const getStatusColor = (s: string) => {
     switch (s) {
-      case 'Done':
+      case 'Completed':
         return 'bg-green-100 text-green-700 border-green-200'
       case 'In Progress':
         return 'bg-blue-100 text-blue-700 border-blue-200'
@@ -133,16 +138,35 @@ export function TaskDetailModal({
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add more details..."
-                rows={4}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-700">
+                  {isTranscriptContext && !isEditingTranscript ? 'Meeting Context' : 'Description'}
+                </label>
+                {isTranscriptContext && !isEditingTranscript && (
+                  <button
+                    onClick={() => {
+                      setDescription(stripHighlightMarkers(description))
+                      setIsEditingTranscript(true)
+                    }}
+                    className="text-[10px] text-blue-600 hover:text-blue-800"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+              {isTranscriptContext && !isEditingTranscript ? (
+                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-700 leading-relaxed max-h-48 overflow-y-auto">
+                  {renderHighlightedText(description)}
+                </div>
+              ) : (
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Add more details..."
+                  rows={4}
+                  className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
             </div>
 
             {/* Status & Priority Row */}
@@ -156,7 +180,7 @@ export function TaskDetailModal({
                   onChange={(e) => setStatus(e.target.value as Task['status'])}
                   className={`w-full text-sm border rounded px-3 py-2 ${getStatusColor(status)}`}
                 >
-                  <option value="Backlog">Backlog</option>
+                  <option value="Open">Open</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Blocked">Blocked</option>
                   <option value="Done">Done</option>

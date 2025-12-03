@@ -373,7 +373,7 @@ export const themeMeetingsSummarySchema = z.object({
 /**
  * Task Schemas
  */
-export const taskStatusSchema = z.enum(['Backlog', 'In Progress', 'Blocked', 'Done'])
+export const taskStatusSchema = z.enum(['Open', 'In Progress', 'Blocked', 'Completed'])
 
 export const taskPrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical'])
 
@@ -401,7 +401,7 @@ export const taskSchema = z.object({
 export const createTaskSchema = z.object({
   name: z.string().min(1, 'Task name is required').max(500, 'Name must be 500 characters or less'),
   description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
-  status: taskStatusSchema.default('Backlog'),
+  status: taskStatusSchema.default('Open'),
   priority: taskPrioritySchema.default('Medium'),
   assigneeId: z.string().optional(),
   assigneeName: z.string().max(200, 'Assignee name must be 200 characters or less').optional(),

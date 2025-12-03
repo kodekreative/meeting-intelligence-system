@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Task } from '../page'
+import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TertiaryGroup {
   key: string
@@ -41,10 +42,10 @@ const getPriorityColor = (priority: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Done': return 'text-green-600'
+    case 'Completed': return 'text-green-600'
     case 'In Progress': return 'text-blue-600'
     case 'Blocked': return 'text-red-600'
-    case 'Backlog': return 'text-gray-500'
+    case 'Open': return 'text-gray-500'
     default: return 'text-gray-500'
   }
 }
@@ -93,19 +94,24 @@ function TaskRow({
       <div onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
-          checked={task.status === 'Done'}
-          onChange={(e) => onStatusChange(task.id, e.target.checked ? 'Done' : 'Backlog')}
-          className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          checked={task.status === 'Completed'}
+          onChange={(e) => {
+            e.stopPropagation()
+            onStatusChange(task.id, e.target.checked ? 'Completed' : 'Open')
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
         />
       </div>
 
       {/* Task Name */}
       <div className="flex-1 min-w-0">
-        <div className={`text-xs font-medium truncate ${task.status === 'Done' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+        <div className={`text-xs font-medium truncate ${task.status === 'Completed' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
           {task.name}
         </div>
-        {task.description && (
-          <div className="text-[10px] text-gray-500 truncate mt-0.5">{task.description}</div>
+        {getMeaningfulDescription(task.description) && (
+          <div className="text-[10px] text-gray-500 truncate mt-0.5">{getMeaningfulDescription(task.description)}</div>
         )}
       </div>
 
@@ -142,13 +148,18 @@ function TaskRow({
       <div className="w-20 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <select
           value={task.status}
-          onChange={(e) => onStatusChange(task.id, e.target.value as Task['status'])}
+          onChange={(e) => {
+            e.stopPropagation()
+            onStatusChange(task.id, e.target.value as Task['status'])
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           className={`text-[10px] border-0 bg-transparent ${getStatusColor(task.status)} cursor-pointer w-full`}
         >
-          <option value="Backlog">Backlog</option>
+          <option value="Open">Open</option>
           <option value="In Progress">In Progress</option>
           <option value="Blocked">Blocked</option>
-          <option value="Done">Done</option>
+          <option value="Completed">Completed</option>
         </select>
       </div>
 
@@ -221,7 +232,7 @@ export function TaskNestedGroupedList({
       {nestedGroups.map((group) => {
         const isPrimaryCollapsed = collapsedPrimary.has(group.primaryKey)
         const totalTasks = group.tasks.length
-        const doneTasks = group.tasks.filter(t => t.status === 'Done').length
+        const doneTasks = group.tasks.filter(t => t.status === 'Completed').length
         const inProgressTasks = group.tasks.filter(t => t.status === 'In Progress').length
 
         return (
@@ -270,7 +281,7 @@ export function TaskNestedGroupedList({
                     {group.secondaryGroups.map((secondary) => {
                       const compositeKey = `${group.primaryKey}::${secondary.key}`
                       const isSecondaryCollapsed = collapsedSecondary.has(compositeKey)
-                      const secondaryDone = secondary.tasks.filter(t => t.status === 'Done').length
+                      const secondaryDone = secondary.tasks.filter(t => t.status === 'Completed').length
 
                       return (
                         <div key={secondary.key}>
@@ -300,7 +311,7 @@ export function TaskNestedGroupedList({
                                   {secondary.tertiaryGroups.map((tertiary) => {
                                     const tertiaryCompositeKey = `${group.primaryKey}::${secondary.key}::${tertiary.key}`
                                     const isTertiaryCollapsed = collapsedTertiary.has(tertiaryCompositeKey)
-                                    const tertiaryDone = tertiary.tasks.filter(t => t.status === 'Done').length
+                                    const tertiaryDone = tertiary.tasks.filter(t => t.status === 'Completed').length
 
                                     return (
                                       <div key={tertiary.key}>

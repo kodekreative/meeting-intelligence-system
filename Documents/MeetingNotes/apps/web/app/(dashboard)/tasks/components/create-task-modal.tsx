@@ -34,7 +34,7 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({ onClose, onCreate, isLoading, users = [], meetings = [] }: CreateTaskModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [status, setStatus] = useState('Backlog')
+  const [status, setStatus] = useState('Open')
   const [priority, setPriority] = useState('Medium')
   const [dueDate, setDueDate] = useState('')
   const [assigneeInput, setAssigneeInput] = useState('')
@@ -225,7 +225,7 @@ export function CreateTaskModal({ onClose, onCreate, isLoading, users = [], meet
                   onChange={(e) => setStatus(e.target.value)}
                   className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="Backlog">Backlog</option>
+                  <option value="Open">Open</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Blocked">Blocked</option>
                   <option value="Done">Done</option>

@@ -245,11 +245,181 @@ export class AirtableClient {
   }
 
   /**
-   * Create a new action item
+   * Create a new action item and auto-create corresponding task
    */
   async createActionItem(fields: Partial<ActionItemRecord['fields']>): Promise<ActionItemRecord> {
+    // Create the action item
     const record = await this.base(AIRTABLE_TABLES.ACTION_ITEMS).create(fields as FieldSet)
-    return { id: record.id, fields: record.fields as ActionItemRecord['fields'] }
+    const actionItem = { id: record.id, fields: record.fields as ActionItemRecord['fields'] }
+
+    // Auto-create corresponding task
+    try {
+      await this.createTaskFromActionItem(actionItem)
+    } catch (error) {
+      console.error('Failed to auto-create task from action item:', error)
+      // Don't fail the action item creation if task creation fails
+    }
+
+    return actionItem
+  }
+
+  /**
+   * Create a task from an action item
+   */
+  async createTaskFromActionItem(actionItem: ActionItemRecord): Promise<void> {
+    const taskDescription = actionItem.fields['Task Description'] || 'Untitled Task'
+
+    // Try to extract context from meeting transcript if available
+    let description = ''
+    const sourceMeetingId = actionItem.fields['Source Meeting']?.[0]
+
+    if (sourceMeetingId) {
+      try {
+        const meeting = await this.getMeeting(sourceMeetingId)
+        // Use "Transcript Speakers" field which contains the full transcript
+        const transcript = meeting?.fields['Transcript Speakers']
+        if (transcript) {
+          // Extract context around the action item from the transcript
+          description = this.extractContextFromTranscript(
+            transcript,
+            taskDescription
+          )
+        }
+      } catch (error) {
+        console.warn('Failed to extract context from meeting transcript:', error)
+      }
+    }
+
+    // Fall back to Notes if no context extracted
+    if (!description) {
+      const notes = actionItem.fields.Notes || ''
+      const isRedundantDescription = !notes.trim() ||
+        notes.toLowerCase().startsWith('from:') ||
+        notes.toLowerCase().startsWith('from ')
+      if (!isRedundantDescription) {
+        description = notes
+      }
+    }
+
+    const taskFields: Record<string, unknown> = {
+      'Name': taskDescription,
+      'Status': 'Open',
+      'Priority': actionItem.fields.Priority || 'Medium',
+      'Source': 'Action Item',
+      'Source Action Item ID': actionItem.id,
+    }
+
+    // Add description if we have meaningful content
+    if (description) {
+      taskFields['Description'] = description
+    }
+
+    // Add due date if present
+    if (actionItem.fields['Due Date']) {
+      taskFields['Due Date'] = actionItem.fields['Due Date']
+    }
+
+    // Add company link if present
+    if (actionItem.fields.Company && actionItem.fields.Company.length > 0) {
+      taskFields['Company'] = actionItem.fields.Company
+    }
+
+    // Add source meeting ID if present
+    if (sourceMeetingId) {
+      taskFields['Source Meeting ID'] = sourceMeetingId
+    }
+
+    await this.base(AIRTABLE_TABLES.TASKS).create(taskFields as FieldSet)
+  }
+
+  /**
+   * Extract relevant context from a meeting transcript for a given action item
+   * Finds the exact phrase in the transcript and highlights it with == markers
+   */
+  private extractContextFromTranscript(transcript: string, actionItem: string): string {
+    if (!transcript || !actionItem) return ''
+
+    // Extract key phrases from action item (looking for the longest matching phrase)
+    const actionLower = actionItem.toLowerCase()
+    const words = actionLower.split(/\s+/).filter(w => w.length > 2)
+    const transcriptLower = transcript.toLowerCase()
+
+    // Find the best matching phrase and its position in the transcript
+    let bestPhrase = ''
+    let bestPhrasePos = -1
+
+    // Try progressively smaller phrases from the action item
+    for (let phraseLen = Math.min(6, words.length); phraseLen >= 3; phraseLen--) {
+      for (let start = 0; start <= words.length - phraseLen; start++) {
+        const phrase = words.slice(start, start + phraseLen).join(' ')
+        const pos = transcriptLower.indexOf(phrase)
+        if (pos !== -1 && phrase.length > bestPhrase.length) {
+          bestPhrase = phrase
+          bestPhrasePos = pos
+        }
+      }
+      // If we found a good match, stop looking for shorter phrases
+      if (bestPhrase.length >= 20) break
+    }
+
+    // If no phrase match, try to find 2+ key words close together
+    if (bestPhrasePos === -1) {
+      const keyWords = words.filter(w => w.length > 4)
+      for (const word of keyWords) {
+        const pos = transcriptLower.indexOf(word)
+        if (pos !== -1) {
+          bestPhrasePos = pos
+          bestPhrase = word
+          break
+        }
+      }
+    }
+
+    if (bestPhrasePos === -1) return ''
+
+    // Extract context around the match (300 chars before, 200 chars after)
+    const contextStart = Math.max(0, bestPhrasePos - 300)
+    const contextEnd = Math.min(transcript.length, bestPhrasePos + bestPhrase.length + 200)
+
+    // Find the actual phrase in the original transcript (preserve case)
+    const matchStart = bestPhrasePos - contextStart
+    const matchEnd = matchStart + bestPhrase.length
+
+    let context = transcript.substring(contextStart, contextEnd)
+
+    // Find the actual text that matches (preserving original case)
+    const actualMatchText = context.substring(matchStart, matchEnd)
+
+    // Insert highlight markers around the matching phrase
+    context =
+      context.substring(0, matchStart) +
+      '==' + actualMatchText + '==' +
+      context.substring(matchEnd)
+
+    // Clean up: add ellipsis if we truncated
+    if (contextStart > 0) {
+      // Find first sentence/phrase boundary
+      const firstBreak = context.indexOf('. ')
+      if (firstBreak > 0 && firstBreak < 50) {
+        context = context.substring(firstBreak + 2)
+      }
+      context = '...' + context
+    }
+    if (contextEnd < transcript.length) {
+      // Find last sentence/phrase boundary
+      const lastBreak = context.lastIndexOf('. ')
+      if (lastBreak > context.length - 50 && lastBreak > 0) {
+        context = context.substring(0, lastBreak + 1)
+      }
+      context = context + '...'
+    }
+
+    // Truncate if still too long
+    if (context.length > 800) {
+      context = context.substring(0, 797) + '...'
+    }
+
+    return context.trim()
   }
 
   /**

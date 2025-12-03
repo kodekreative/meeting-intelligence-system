@@ -27,10 +27,10 @@ const getPriorityColor = (priority: string) => {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case 'Done': return 'bg-green-100 text-green-700'
+    case 'Completed': return 'bg-green-100 text-green-700'
     case 'In Progress': return 'bg-blue-100 text-blue-700'
     case 'Blocked': return 'bg-red-100 text-red-700'
-    case 'Backlog': return 'bg-gray-100 text-gray-600'
+    case 'Open': return 'bg-gray-100 text-gray-600'
     default: return 'bg-gray-100 text-gray-600'
   }
 }
@@ -104,7 +104,7 @@ export function BoardCard({
         {/* Task name */}
         <div
           className={`text-xs font-medium mb-2 cursor-pointer hover:text-blue-600 ${
-            task.status === 'Done' ? 'line-through text-gray-400' : 'text-gray-900'
+            task.status === 'Completed' ? 'line-through text-gray-400' : 'text-gray-900'
           }`}
           onClick={(e) => {
             e.stopPropagation()
@@ -135,19 +135,20 @@ export function BoardCard({
 
         {/* Quick checkbox */}
         <div className="mt-2 pt-2 border-t border-gray-100">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer" onPointerDown={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
-              checked={task.status === 'Done'}
+              checked={task.status === 'Completed'}
               onChange={(e) => {
                 e.stopPropagation()
-                onStatusChange(task.id, e.target.checked ? 'Done' : 'Backlog')
+                onStatusChange(task.id, e.target.checked ? 'Completed' : 'Open')
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
-              className="w-3 h-3 text-green-600 border-gray-300 rounded"
+              className="w-3 h-3 text-green-600 border-gray-300 rounded cursor-pointer"
             />
             <span className="text-[10px] text-gray-500">
-              {task.status === 'Done' ? 'Completed' : 'Mark complete'}
+              {task.status === 'Completed' ? 'Completed' : 'Mark complete'}
             </span>
           </label>
         </div>

@@ -174,7 +174,7 @@ export function TaskBoardView({ tasks, onStatusChange, onTaskClick }: TaskBoardV
     }
 
     if (groupBy === 'status') {
-      const statuses = ['Backlog', 'In Progress', 'Blocked', 'Done']
+      const statuses = ['Open', 'In Progress', 'Blocked', 'Completed']
       statuses.forEach(status => {
         columnMap[status] = { id: status, title: status, tasks: [] }
       })
@@ -216,7 +216,7 @@ export function TaskBoardView({ tasks, onStatusChange, onTaskClick }: TaskBoardV
     let result = Object.values(columnMap)
 
     if (groupBy === 'status') {
-      const order = ['Backlog', 'In Progress', 'Blocked', 'Done']
+      const order = ['Open', 'In Progress', 'Blocked', 'Completed']
       result.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))
     } else if (groupBy === 'priority') {
       const order = ['Critical', 'High', 'Medium', 'Low']
@@ -307,10 +307,10 @@ export function TaskBoardView({ tasks, onStatusChange, onTaskClick }: TaskBoardV
   const getColumnColor = (columnId: string) => {
     if (groupBy === 'status') {
       switch (columnId) {
-        case 'Backlog': return 'bg-gray-100 border-gray-300'
+        case 'Open': return 'bg-gray-100 border-gray-300'
         case 'In Progress': return 'bg-blue-50 border-blue-300'
         case 'Blocked': return 'bg-red-50 border-red-300'
-        case 'Done': return 'bg-green-50 border-green-300'
+        case 'Completed': return 'bg-green-50 border-green-300'
       }
     }
     if (groupBy === 'priority') {

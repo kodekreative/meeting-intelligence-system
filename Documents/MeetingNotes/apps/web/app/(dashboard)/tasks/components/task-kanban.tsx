@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Task } from '../page'
+import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskKanbanProps {
   tasks: Task[]
@@ -10,10 +11,10 @@ interface TaskKanbanProps {
 }
 
 const columns: { key: Task['status']; label: string; color: string; bgColor: string }[] = [
-  { key: 'Backlog', label: 'Backlog', color: 'text-gray-600', bgColor: 'bg-gray-100' },
+  { key: 'Open', label: 'Open', color: 'text-gray-600', bgColor: 'bg-gray-100' },
   { key: 'In Progress', label: 'In Progress', color: 'text-blue-600', bgColor: 'bg-blue-100' },
   { key: 'Blocked', label: 'Blocked', color: 'text-red-600', bgColor: 'bg-red-100' },
-  { key: 'Done', label: 'Done', color: 'text-green-600', bgColor: 'bg-green-100' },
+  { key: 'Completed', label: 'Completed', color: 'text-green-600', bgColor: 'bg-green-100' },
 ]
 
 const getPriorityColor = (priority: string) => {
@@ -166,14 +167,14 @@ export function TaskKanban({ tasks, onStatusChange, onTaskClick }: TaskKanbanPro
                     </div>
 
                     {/* Task Name */}
-                    <div className={`text-xs font-medium ${task.status === 'Done' ? 'line-through text-gray-500' : 'text-gray-900'} mb-1`}>
+                    <div className={`text-xs font-medium ${task.status === 'Completed' ? 'line-through text-gray-500' : 'text-gray-900'} mb-1`}>
                       {task.name}
                     </div>
 
                     {/* Task Description Preview */}
-                    {task.description && (
+                    {getMeaningfulDescription(task.description) && (
                       <div className="text-[10px] text-gray-500 line-clamp-2 mb-2">
-                        {task.description}
+                        {getMeaningfulDescription(task.description)}
                       </div>
                     )}
 

@@ -79,10 +79,10 @@ export const ACTION_ITEMS = {
  */
 export const TASKS = {
   STATUS: {
-    BACKLOG: 'Backlog',
+    BACKLOG: 'Open',
     IN_PROGRESS: 'In Progress',
     BLOCKED: 'Blocked',
-    DONE: 'Done',
+    DONE: 'Completed',
   },
   PRIORITY: {
     LOW: 'Low',

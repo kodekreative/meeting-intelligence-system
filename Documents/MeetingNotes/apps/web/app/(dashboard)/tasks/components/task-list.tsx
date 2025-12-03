@@ -1,6 +1,7 @@
 'use client'
 
 import type { Task } from '../page'
+import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskListProps {
   tasks: Task[]
@@ -25,13 +26,13 @@ const getPriorityColor = (priority: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Done':
+    case 'Completed':
       return 'text-green-700 bg-green-50 border-green-200'
     case 'In Progress':
       return 'text-blue-700 bg-blue-50 border-blue-200'
     case 'Blocked':
       return 'text-red-700 bg-red-50 border-red-200'
-    case 'Backlog':
+    case 'Open':
     default:
       return 'text-gray-700 bg-gray-50 border-gray-200'
   }
@@ -72,20 +73,25 @@ export function TaskList({ tasks, onStatusChange, onTaskClick }: TaskListProps) 
             <div onClick={(e) => e.stopPropagation()}>
               <input
                 type="checkbox"
-                checked={task.status === 'Done'}
-                onChange={(e) => onStatusChange(task.id, e.target.checked ? 'Done' : 'Backlog')}
-                className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                checked={task.status === 'Completed'}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onStatusChange(task.id, e.target.checked ? 'Completed' : 'Open')
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
               />
             </div>
 
             {/* Task Name & Description */}
             <div>
-              <div className={`font-medium ${task.status === 'Done' ? 'line-through text-gray-500' : 'text-gray-900'} truncate`} title={task.name}>
+              <div className={`font-medium ${task.status === 'Completed' ? 'line-through text-gray-500' : 'text-gray-900'} truncate`} title={task.name}>
                 {task.name}
               </div>
-              {task.description && (
-                <div className="text-[10px] text-gray-500 truncate mt-0.5" title={task.description}>
-                  {task.description}
+              {getMeaningfulDescription(task.description) && (
+                <div className="text-[10px] text-gray-500 truncate mt-0.5" title={getMeaningfulDescription(task.description)}>
+                  {getMeaningfulDescription(task.description)}
                 </div>
               )}
             </div>
@@ -94,13 +100,18 @@ export function TaskList({ tasks, onStatusChange, onTaskClick }: TaskListProps) 
             <div onClick={(e) => e.stopPropagation()}>
               <select
                 value={task.status}
-                onChange={(e) => onStatusChange(task.id, e.target.value as Task['status'])}
-                className={`text-[10px] border rounded px-1.5 py-0.5 ${getStatusColor(task.status)}`}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onStatusChange(task.id, e.target.value as Task['status'])
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className={`text-[10px] border rounded px-1.5 py-0.5 ${getStatusColor(task.status)} cursor-pointer`}
               >
-                <option value="Backlog">Backlog</option>
+                <option value="Open">Open</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Blocked">Blocked</option>
-                <option value="Done">Done</option>
+                <option value="Completed">Completed</option>
               </select>
             </div>
 

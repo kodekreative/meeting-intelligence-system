@@ -16,7 +16,7 @@ export interface Task {
   id: string
   name: string
   description?: string
-  status: 'Backlog' | 'In Progress' | 'Blocked' | 'Done'
+  status: 'Open' | 'In Progress' | 'Blocked' | 'Completed'
   priority: 'Low' | 'Medium' | 'High' | 'Critical'
   assigneeId?: string
   assigneeName?: string
@@ -38,10 +38,10 @@ const STORAGE_KEY = 'tasks-view-preferences'
 
 // Status options
 const STATUS_OPTIONS = [
-  { value: 'Backlog', label: 'Backlog' },
+  { value: 'Open', label: 'Open' },
   { value: 'In Progress', label: 'In Progress' },
   { value: 'Blocked', label: 'Blocked' },
-  { value: 'Done', label: 'Done' },
+  { value: 'Completed', label: 'Completed' },
 ]
 
 // Priority options
@@ -58,8 +58,8 @@ const SOURCE_OPTIONS = [
   { value: 'Manual', label: 'Manual' },
 ]
 
-// Default filter values - Open = not Done
-const DEFAULT_STATUS_FILTER = new Set(['Backlog', 'In Progress', 'Blocked'])
+// Default filter values - Open = not Completed
+const DEFAULT_STATUS_FILTER = new Set(['Open', 'In Progress', 'Blocked'])
 const DEFAULT_PRIORITY_FILTER = new Set(['Low', 'Medium', 'High', 'Critical'])
 const DEFAULT_SOURCE_FILTER = new Set(['Action Item', 'Manual'])
 
@@ -284,7 +284,7 @@ export default function TasksPage() {
   const sortGroups = (entries: [string, unknown][], groupBy: GroupByOption) => {
     return entries.sort(([a], [b]) => {
       if (groupBy === 'status') {
-        const order = ['Backlog', 'In Progress', 'Blocked', 'Done']
+        const order = ['Open', 'In Progress', 'Blocked', 'Completed']
         return order.indexOf(a) - order.indexOf(b)
       }
       if (groupBy === 'date') {
@@ -373,7 +373,7 @@ export default function TasksPage() {
     // Sort primary groups
     result.sort((a, b) => {
       if (primaryGroupBy === 'status') {
-        const order = ['Backlog', 'In Progress', 'Blocked', 'Done']
+        const order = ['Open', 'In Progress', 'Blocked', 'Completed']
         return order.indexOf(a.primaryKey) - order.indexOf(b.primaryKey)
       }
       if (primaryGroupBy === 'date') {
@@ -412,10 +412,10 @@ export default function TasksPage() {
   // Check if filters are at default
   const isDefaultFilters = useMemo(() => {
     const statusDefault = filterStatus.size === 3 &&
-      filterStatus.has('Backlog') &&
+      filterStatus.has('Open') &&
       filterStatus.has('In Progress') &&
       filterStatus.has('Blocked') &&
-      !filterStatus.has('Done')
+      !filterStatus.has('Completed')
     const priorityDefault = filterPriority.size === 4
     const sourceDefault = filterSource.size === 2
     const assigneeDefault = filterAssignees.size === 0
@@ -466,10 +466,10 @@ export default function TasksPage() {
 
   // Count tasks by status for summary
   const statusCounts = {
-    Backlog: tasks.filter(t => t.status === 'Backlog').length,
+    Open: tasks.filter(t => t.status === 'Open').length,
     'In Progress': tasks.filter(t => t.status === 'In Progress').length,
     Blocked: tasks.filter(t => t.status === 'Blocked').length,
-    Done: tasks.filter(t => t.status === 'Done').length,
+    Done: tasks.filter(t => t.status === 'Completed').length,
   }
 
   return (
@@ -656,8 +656,8 @@ export default function TasksPage() {
       <div className="bg-white border-b border-gray-200 px-6 py-2 flex-shrink-0">
         <div className="flex gap-4">
           <div className="text-xs">
-            <span className="text-gray-500">Backlog:</span>{' '}
-            <span className="font-medium text-gray-700">{statusCounts.Backlog}</span>
+            <span className="text-gray-500">Open:</span>{' '}
+            <span className="font-medium text-gray-700">{statusCounts.Open}</span>
           </div>
           <div className="text-xs">
             <span className="text-gray-500">In Progress:</span>{' '}
