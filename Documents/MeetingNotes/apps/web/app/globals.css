@@ -35,4 +35,9 @@
     @apply bg-gray-50 text-foreground;
     font-size: 13px;
   }
+
+  /* Ensure navigation is always clickable */
+  nav, nav * {
+    pointer-events: auto !important;
+  }
 }

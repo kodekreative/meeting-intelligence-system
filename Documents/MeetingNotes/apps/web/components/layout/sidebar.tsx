@@ -7,10 +7,13 @@ import { cn } from '@/lib/utils'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Meetings', href: '/meetings' },
-  { name: 'Action Items', href: '/action-items' },
+  { name: 'Tasks', href: '/tasks' },
+  { name: 'Themes', href: '/themes' },
   { name: 'Meeting Titles', href: '/companies' },
   { name: 'Contacts', href: '/contacts' },
   { name: 'Intelligence', href: '/intelligence' },
+  { name: 'Email Settings', href: '/settings/email' },
+  { name: 'Calendar (Simple)', href: '/settings/calendar-simple' },
 ]
 
 export function Sidebar() {

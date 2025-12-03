@@ -6,19 +6,99 @@ Transform meeting transcripts into actionable intelligence with daily briefings,
 
 The Meeting Intelligence System is a comprehensive platform designed for business professionals to manage meeting knowledge, relationships, and action items. By leveraging AI to extract insights from meeting transcriptions stored in Airtable, the system provides:
 
-- **Daily Intelligence Briefings** - Comprehensive meeting prep delivered at 6 AM
-- **Automated Task Tracking** - AI-extracted action items with follow-up management
-- **Relationship Intelligence** - Personal details for authentic connection building
-- **Portfolio Oversight** - Business issues tracking across companies
+- **Orbital Landing Page** - Stunning animated visualization of your top 20 meeting titles
+- **Action Items Management** - Advanced grid view with sorting, filtering, search, and inline editing
+- **Multiple View Modes** - Timeline, By Assignee, By Meeting, and Airtable-like Grid View
+- **Meeting Titles Intelligence** - Group meetings by title with auto-expand and scroll navigation
+- **Real-time Data Sync** - Auto-save to Airtable with Redis caching
+- **Meeting Intelligence** - Parse action items from meeting transcripts
+- **Relationship Tracking** - Track assignees, meetings, and task dependencies
+
+## Features
+
+### Orbital Landing Page
+
+The system starts with an immersive orbital visualization of your meeting landscape:
+
+**Visual Design:**
+- Dark gradient theme (gray-900 → slate-900 → black)
+- Animated pulsing background gradients in blue, purple, and pink
+- Three concentric orbital rings displaying meeting titles
+- Glass-morphism UI elements with backdrop blur effects
+
+**Intelligent Display:**
+- Shows top 20 unique meeting titles based on frequency
+- Font sizes scale with meeting frequency (10-16px)
+- Slower orbital speeds for meditative viewing (2-4 minutes per orbit)
+- Text stays horizontal while orbiting for easy reading
+- Hover effects (brighten, scale) indicate interactivity
+
+**Navigation:**
+- Click any orbiting title to navigate to Meeting Titles page
+- Automatically expands and scrolls to that title's section
+- Shows all meetings with that title, summaries, and topics
+- Access landing page anytime via logo in sidebar
+
+### Action Items Management
+
+**Four View Modes:**
+1. **Timeline View** - Tasks organized by due date (Overdue, Today, This Week, Later, Unscheduled, Completed)
+2. **By Assignee** - Tasks grouped by person responsible
+3. **By Meeting** - Tasks grouped by source meeting
+4. **Grid View** - Airtable-like spreadsheet with advanced capabilities
+
+**Grid View Capabilities:**
+- Inline editing (double-click any cell)
+- Multi-column sorting (Shift+Click headers)
+- Column resizing (drag edges)
+- Dropdown editors for Status and Priority
+- Real-time auto-save to Airtable
+
+**Search & Filtering:**
+- Full-text search across tasks, assignees, and meetings
+- Filter by Status (Open, In Progress, Complete, Overdue)
+- Filter by Priority (Low, Medium, High, Critical)
+- Filter by Assignee (dynamically populated)
+- Sort by Due Date, Priority, Assignee, or Status
+
+**Fields Displayed:**
+- Checkbox (mark complete)
+- Task Description
+- Assignee
+- Status (dropdown)
+- Priority (color-coded badge)
+- Due Date
+- Created Date
+- Meeting Title (source)
+
+### Meeting Titles Intelligence
+
+**Organization:**
+- Groups meetings by title showing total count and date range
+- Displays topics across all meetings with that title
+- Shows chronological meeting notes with summaries
+- Expandable/collapsible sections for each title
+
+**Smart Navigation:**
+- URL parameter-based auto-expand functionality
+- Smooth scroll to specific meeting title sections
+- Clicking orbital title opens and highlights that section
+- Search across titles, summaries, and topics
+
+### Meeting Intelligence
+- Parse action items from meeting transcripts
+- Extract assignee names automatically
+- Link action items to source meetings
+- Lookup meeting titles in action items table
 
 ## Tech Stack
 
 ### Frontend
 - **Next.js 14** (App Router) - React framework with SSR
 - **TypeScript 5.3** - Type safety across the application
-- **Tailwind CSS + shadcn/ui** - Modern, accessible UI components
-- **TanStack Query** - Server state management with caching
-- **Zustand** - Client state management
+- **Tailwind CSS** - Utility-first CSS framework
+- **TanStack Query (React Query)** - Server state management with caching
+- **react-data-grid** - High-performance spreadsheet-like data grid
 
 ### Backend
 - **Node.js 20 + Express** - Fast, proven backend framework
@@ -117,7 +197,8 @@ meeting-intelligence/
    ```
 
 5. **Access the application**
-   - Frontend: http://localhost:3000
+   - Landing Page: http://localhost:3000 (Orbital visualization)
+   - Dashboard: http://localhost:3000/dashboard
    - API: http://localhost:3001
    - API Docs: http://localhost:3001/docs
 
@@ -186,8 +267,10 @@ pnpm <command> --filter=<workspace>
 
 4. **Web Dashboard**
    - Real-time data from Airtable (cached in Redis)
-   - Multiple views: Today, Company, Person, Tasks
-   - Optimistic updates with background sync
+   - Action Items views: Timeline, By Assignee, By Meeting, Grid View
+   - Advanced filtering: search, status, priority, assignee
+   - Multi-column sorting with visual indicators
+   - Inline editing with auto-save to Airtable
 
 ### Key Design Decisions
 
@@ -306,6 +389,25 @@ For questions or issues, please contact the development team.
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-11-15
+**Version**: 1.2.0
+**Last Updated**: 2025-11-16
 **Maintained By**: Pine Lake Capital & Conversely AI
+
+## Recent Updates
+
+### v1.2.0 (2025-11-16)
+- **Orbital Landing Page** - Stunning animated visualization of top 20 meeting titles
+- **Dark Theme** - Beautiful gradient backgrounds with glass-morphism UI
+- **Frequency-Based Sizing** - Meeting titles scale (10-16px) based on occurrence
+- **Smart Navigation** - Click orbital titles to auto-expand and scroll to sections
+- **Meeting Titles Page** - Enhanced with URL parameter-based navigation
+- **Improved Clickability** - Z-index fixes ensure all orbital elements are clickable
+
+### v1.1.0 (2025-11-16)
+- Added Grid View with Airtable-like functionality
+- Implemented advanced search and filtering
+- Added multi-column sorting
+- Created Timeline, Assignee, and Meeting views
+- Added Created Date field across all views
+- Improved UI with compact design (10-11px fonts)
+- Enhanced API with Meeting Title lookup support

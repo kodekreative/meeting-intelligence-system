@@ -298,7 +298,7 @@ export interface TaskRecord {
   fields: {
     'Name': string // Task title
     'Description'?: string // Task details and notes
-    'Status': 'Backlog' | 'In Progress' | 'Blocked' | 'Done'
+    'Status': 'Open' | 'In Progress' | 'Blocked' | 'Done'
     'Priority': 'Low' | 'Medium' | 'High' | 'Critical'
     'Assignee'?: string[] // Link to Users table
     'Due Date'?: string // ISO date

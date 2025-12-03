@@ -3,13 +3,24 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { formatDateTime, formatDate } from '@/lib/utils'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const today = new Date().toISOString().split('T')[0]
+  const demoUserId = 'recJns5edTqex92I8' // Your Airtable User Record ID
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['meetings', 'today', today],
     queryFn: () => apiClient.getMeetings({ fromDate: today, toDate: today }),
+  })
+
+  // Fetch today's calendar events
+  const { data: calendarData, isLoading: calendarLoading } = useQuery({
+    queryKey: ['calendar-events', 'today', demoUserId],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/icalendar/events?userId=${demoUserId}&days=1`)
+      return response.json()
+    },
   })
 
   if (isLoading) {
@@ -43,6 +54,7 @@ export default function DashboardPage() {
   }
 
   const meetings = data?.data || []
+  const calendarEvents = calendarData?.data?.events || []
   const todayDate = formatDate(new Date())
 
   return (
@@ -62,17 +74,65 @@ export default function DashboardPage() {
       {/* Main content */}
       <div className="p-6 relative z-10">
         <div className="max-w-6xl">
-          {/* Today's Meetings Section */}
+          {/* Today's Calendar Events */}
           <div className="mb-6">
             <h2 className="text-xs font-semibold text-gray-300 mb-3 uppercase tracking-wide">
-              Today's Meetings
+              Today's Schedule
             </h2>
 
-            {meetings.length === 0 ? (
+            {calendarLoading ? (
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 px-6 py-4 rounded-lg">
+                <div className="text-xs text-gray-300">Loading calendar...</div>
+              </div>
+            ) : calendarEvents.length === 0 ? (
               <div className="bg-white/5 backdrop-blur-md border border-white/10 px-6 py-8 text-center rounded-lg">
                 <div className="text-xs text-gray-300">No meetings scheduled for today</div>
                 <div className="text-xs text-gray-400 mt-1">
                   Your calendar is clear
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {calendarEvents.map((event: any) => (
+                  <div
+                    key={event.id}
+                    className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all rounded-lg"
+                  >
+                    <div className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-white mb-1">
+                            {event.subject || 'Untitled Meeting'}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                            <span>{formatDateTime(event.startTime)}</span>
+                            {event.location && (
+                              <>
+                                <span>•</span>
+                                <span>{event.location}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Meeting Transcripts Section */}
+          <div className="mb-6">
+            <h2 className="text-xs font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+              Meeting Transcripts
+            </h2>
+
+            {meetings.length === 0 ? (
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 px-6 py-8 text-center rounded-lg">
+                <div className="text-xs text-gray-300">No meeting transcripts for today</div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Transcripts will appear here after meetings are processed
                 </div>
               </div>
             ) : (
@@ -85,9 +145,12 @@ export default function DashboardPage() {
                     <div className="px-4 py-3">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="text-xs font-medium text-white mb-1">
+                          <Link
+                            href={`/meetings/${meeting.id}`}
+                            className="text-xs font-medium text-white hover:text-blue-300 hover:underline mb-1 inline-block"
+                          >
                             {meeting.title || 'Team Discussion'}
-                          </div>
+                          </Link>
                           <div className="flex items-center gap-3 text-xs text-gray-400">
                             {meeting.startTime && (
                               <span>{formatDateTime(meeting.startTime)}</span>

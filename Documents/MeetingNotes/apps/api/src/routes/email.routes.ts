@@ -145,6 +145,20 @@ router.post('/trigger-digest', asyncHandler(async (req: Request, res: Response) 
 }))
 
 /**
+ * POST /api/email/trigger-task-emails
+ * Manually trigger per-person task emails (for testing)
+ * Sends separate email for each person with their outstanding tasks from the Tasks table
+ */
+router.post('/trigger-task-emails', asyncHandler(async (req: Request, res: Response) => {
+  await schedulerService.triggerPerPersonTaskEmails()
+
+  res.json({
+    success: true,
+    data: { message: 'Per-person task emails triggered successfully' },
+  })
+}))
+
+/**
  * GET /api/email/scheduler-status
  * Get status of scheduled jobs
  */
