@@ -96,8 +96,13 @@ class SchedulerService {
     const allMeetings = await airtable.getMeetings({ maxRecords: 200 })
 
     // Find today's meetings
+    // IMPORTANT: Convert UTC timestamps to local timezone before comparing dates
+    // Airtable stores dates in UTC, so a 7pm Eastern meeting is stored as midnight UTC the next day
     const todaysMeetings = allMeetings.filter(m => {
-      const meetingDateStr = m.fields['Start Time']?.split('T')[0]
+      const startTime = m.fields['Start Time']
+      if (!startTime) return false
+      // Convert UTC timestamp to local timezone and extract date
+      const meetingDateStr = new Date(startTime).toLocaleDateString('en-CA', { timeZone: timezone })
       return meetingDateStr === localDateStr
     })
 
@@ -138,12 +143,15 @@ class SchedulerService {
       const priorMeetingsRaw = allMeetings
         .filter(m => {
           const title = m.fields.Title || m.fields.Name || ''
-          const meetingDateStr = m.fields['Start Time']?.split('T')[0] || ''
+          const startTime = m.fields['Start Time']
+          if (!startTime) return false
+          // Convert UTC to local timezone for date comparison
+          const meetingDateStr = new Date(startTime).toLocaleDateString('en-CA', { timeZone: timezone })
           return title.toLowerCase().includes(firstWord) &&
                  meetingDateStr < localDateStr &&
                  m.id !== meeting.id
         })
-        .sort((a, b) => new Date(b.fields['Start Time']).getTime() - new Date(a.fields['Start Time']).getTime())
+        .sort((a, b) => new Date(b.fields['Start Time'] || 0).getTime() - new Date(a.fields['Start Time'] || 0).getTime())
         .slice(0, 5)
 
       // Transform prior meetings to include full details
