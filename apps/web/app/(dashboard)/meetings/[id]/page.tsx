@@ -67,17 +67,17 @@ export default function MeetingDetailPage() {
       {/* Content */}
       <div className="p-6 space-y-4">
         {/* Basic Info */}
-        <div className="bg-white border border-gray-200 px-6 py-4">
-          <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Meeting Information</h2>
-          <dl className="space-y-3">
-            <div>
-              <dt className="text-xs font-medium text-gray-700">Title</dt>
-              <dd className="text-xs text-gray-900 mt-1">{meeting.title || '-'}</dd>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+          <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">Meeting Information</h2>
+          <div className="rounded-lg overflow-hidden border border-blue-200">
+            <div className="bg-white px-4 py-3">
+              <dt className="text-xs font-semibold text-gray-900">Title</dt>
+              <dd className="text-xs text-gray-700 mt-1">{meeting.title || '-'}</dd>
             </div>
             {meeting.startTime && (
-              <div>
-                <dt className="text-xs font-medium text-gray-700">Date & Time</dt>
-                <dd className="text-xs text-gray-900 mt-1">
+              <div className="bg-gray-50 px-4 py-3">
+                <dt className="text-xs font-semibold text-gray-900">Date & Time</dt>
+                <dd className="text-xs text-gray-700 mt-1">
                   {new Date(meeting.startTime).toLocaleString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -89,132 +89,173 @@ export default function MeetingDetailPage() {
                 </dd>
               </div>
             )}
-            <div>
-              <dt className="text-xs font-medium text-gray-700">Owner</dt>
-              <dd className="text-xs text-gray-900 mt-1">{meeting.ownerName || '-'}</dd>
+            <div className={meeting.startTime ? 'bg-white px-4 py-3' : 'bg-gray-50 px-4 py-3'}>
+              <dt className="text-xs font-semibold text-gray-900">Owner</dt>
+              <dd className="text-xs text-gray-700 mt-1">{meeting.ownerName || '-'}</dd>
               {meeting.ownerEmail && (
-                <dd className="text-xs text-gray-600 mt-1">{meeting.ownerEmail}</dd>
+                <dd className="text-xs text-gray-500 mt-1">{meeting.ownerEmail}</dd>
               )}
             </div>
             {meeting.sessionId && (
-              <div>
-                <dt className="text-xs font-medium text-gray-700">Session ID</dt>
-                <dd className="text-xs text-gray-900 mt-1">{meeting.sessionId}</dd>
+              <div className="bg-gray-50 px-4 py-3">
+                <dt className="text-xs font-semibold text-gray-900">Session ID</dt>
+                <dd className="text-xs text-gray-700 mt-1">{meeting.sessionId}</dd>
               </div>
             )}
             {meeting.reportUrl && (
-              <div>
-                <dt className="text-xs font-medium text-gray-700">Read.ai Report</dt>
+              <div className="bg-white px-4 py-3">
+                <dt className="text-xs font-semibold text-gray-900">Read.ai Report</dt>
                 <dd className="text-xs mt-1">
                   <a
                     href={meeting.reportUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 hover:underline font-medium"
                   >
                     View on Read.ai →
                   </a>
                 </dd>
               </div>
             )}
-          </dl>
+          </div>
         </div>
 
         {/* Participants */}
         {meeting.participants && meeting.participants.length > 0 && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">
               Participants ({meeting.participants.length})
             </h2>
-            <ul className="grid grid-cols-2 gap-2">
-              {meeting.participants.map((participant: string, idx: number) => (
-                <li key={idx} className="text-xs text-gray-900">
-                  • {participant}
-                </li>
-              ))}
-            </ul>
+            <div className="rounded-lg overflow-hidden border border-blue-200">
+              <div className="grid grid-cols-2">
+                {meeting.participants.map((participant: string, idx: number) => (
+                  <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
+                    • <span className="font-medium">{participant}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Summary */}
         {meeting.summary && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Meeting Summary</h2>
-            <ul className="space-y-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">Meeting Summary</h2>
+            <div className="rounded-lg overflow-hidden border border-blue-200">
               {meeting.summary.split('\n').filter((line: string) => line.trim()).map((line: string, idx: number) => (
-                <li key={idx} className="text-xs text-gray-900">
+                <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
                   • {line.trim()}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Topics */}
         {meeting.topics && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Topics Discussed</h2>
-            <ul className="space-y-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">Topics Discussed</h2>
+            <div className="rounded-lg overflow-hidden border border-blue-200">
               {meeting.topics.split(',').map((topic: string, idx: number) => (
-                <li key={idx} className="text-xs text-gray-900">
+                <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
                   • {topic.trim()}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Key Questions */}
         {meeting.keyQuestions && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Key Questions</h2>
-            <ul className="space-y-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">Key Questions</h2>
+            <div className="rounded-lg overflow-hidden border border-blue-200">
               {meeting.keyQuestions.split(',').map((question: string, idx: number) => (
-                <li key={idx} className="text-xs text-gray-900">
+                <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
                   • {question.trim()}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Action Items */}
         {meeting.actionItems && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Action Items</h2>
-            <ul className="space-y-2">
-              {meeting.actionItems.split('\n').filter((line: string) => line.trim()).map((line: string, idx: number) => (
-                <li key={idx} className="text-xs text-gray-900">
-                  • {line.trim()}
-                </li>
-              ))}
-            </ul>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">Action Items</h2>
+            <div className="rounded-lg overflow-hidden border border-blue-200">
+              {meeting.actionItems.split(/[.,]\s*(?=[A-Z])/).filter((line: string) => line.trim()).map((line: string, idx: number) => {
+                // Try to extract assignee name (pattern: "Name will..." or "Name to...")
+                const assigneeMatch = line.trim().match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(will|to|should|needs to|is going to)\s+/i)
+                if (assigneeMatch) {
+                  const assignee = assigneeMatch[1]
+                  const task = line.trim().substring(assignee.length).trim()
+                  return (
+                    <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
+                      • <span className="font-semibold">{assignee}</span> {task}
+                    </div>
+                  )
+                }
+                return (
+                  <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
+                    • {line.trim()}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
         {/* Chapter Summaries */}
         {meeting.chapterSummaries && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Chapter Summaries</h2>
-            <ul className="space-y-2">
-              {meeting.chapterSummaries.split('\n').filter((line: string) => line.trim()).map((line: string, idx: number) => (
-                <li key={idx} className="text-xs text-gray-900">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">Chapter Summaries</h2>
+            <div className="rounded-lg overflow-hidden border border-blue-200">
+              {meeting.chapterSummaries.split(/[.,]\s*(?=[A-Z])/).filter((line: string) => line.trim()).map((line: string, idx: number) => (
+                <div key={idx} className={`text-xs px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900' : 'bg-gray-50 text-gray-700'}`}>
                   • {line.trim()}
-                </li>
+                </div>
               ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Transcript */}
-        {(meeting.speakerBlocks || meeting.transcriptSpeakers) && (
-          <div className="bg-white border border-gray-200 px-6 py-4">
-            <h2 className="text-xs font-semibold text-gray-900 mb-4 uppercase tracking-wide">Transcript</h2>
-            <div className="text-xs text-gray-900 whitespace-pre-wrap font-mono">
-              {meeting.speakerBlocks || meeting.transcriptSpeakers}
             </div>
           </div>
         )}
+
+        {/* Transcript - prefer transcriptSpeakers (actual conversation) over speakerBlocks (which is often a duplicate of chapterSummaries) */}
+        {(meeting.transcriptSpeakers || meeting.speakerBlocks) && (() => {
+          // Use transcriptSpeakers first as it contains the actual conversation
+          // speakerBlocks often contains the same summary as chapterSummaries
+          const rawTranscript = meeting.transcriptSpeakers || meeting.speakerBlocks || ''
+
+          // Split into sentences/turns
+          const conversationTurns = rawTranscript
+            .split(/([.,!?]\s*)(?=[A-Z])/)
+            .reduce((acc: string[], part: string, i: number, arr: string[]) => {
+              if (i % 2 === 0) {
+                const combined = (part + (arr[i + 1] || '')).trim()
+                if (combined) acc.push(combined)
+              }
+              return acc
+            }, [])
+
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+              <h2 className="text-xs font-semibold text-blue-900 mb-4 uppercase tracking-wide">
+                Meeting Points
+              </h2>
+              <div className="rounded-lg overflow-hidden border border-blue-200">
+                {conversationTurns.map((turn: string, idx: number) => (
+                  <div
+                    key={idx}
+                    className={`text-xs leading-relaxed px-4 py-3 ${idx % 2 === 0 ? 'bg-white text-gray-900 font-medium' : 'bg-gray-50 text-gray-700'}`}
+                  >
+                    {turn}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

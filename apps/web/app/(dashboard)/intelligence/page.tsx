@@ -276,9 +276,14 @@ export default function IntelligencePage() {
                           <div className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-2">
                             Meeting Summary
                           </div>
-                          <div className="text-[11px] text-gray-700 leading-relaxed whitespace-pre-wrap">
-                            {meeting.summary}
-                          </div>
+                          <ul className="space-y-1.5">
+                            {meeting.summary.split(/[.!?]+/).filter((s: string) => s.trim()).map((sentence: string, idx: number) => (
+                              <li key={idx} className="text-[11px] text-gray-700 flex gap-2">
+                                <span className="text-blue-600">•</span>
+                                <span>{sentence.trim()}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
 
@@ -303,9 +308,14 @@ export default function IntelligencePage() {
                           <div className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-2">
                             Chapter Summaries
                           </div>
-                          <div className="text-[11px] text-gray-700 leading-relaxed whitespace-pre-wrap">
-                            {meeting.chapterSummaries}
-                          </div>
+                          <ul className="space-y-1.5">
+                            {meeting.chapterSummaries.split(/[.!?]+/).filter((s: string) => s.trim()).map((sentence: string, idx: number) => (
+                              <li key={idx} className="text-[11px] text-gray-700 flex gap-2">
+                                <span className="text-blue-600">•</span>
+                                <span>{sentence.trim()}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </div>

@@ -20,6 +20,7 @@ export const AIRTABLE_TABLES = {
   CALENDAR_EVENTS: 'Calendar Events',
   EMAIL_PREFERENCES: 'Email Preferences',
   TASKS: 'Tasks',
+  TEAM_MEMBER_TOKENS: 'Team Member Tokens',
 } as const
 
 /**
@@ -311,6 +312,31 @@ export interface TaskRecord {
 }
 
 /**
+ * Team Member Tokens Table
+ * Secure access tokens for team member task pages
+ *
+ * Security Design:
+ * - Each team member gets a unique, cryptographically secure token
+ * - Tokens are non-guessable (UUID v4 or similar)
+ * - One token per assignee name - regenerated on demand
+ * - Tokens can be revoked by setting Is Active to false
+ * - Token validates: assignee can only see their own tasks
+ */
+export interface TeamMemberTokenRecord {
+  id: string
+  fields: {
+    'Assignee Name': string // Canonical assignee name (matches Task assignee)
+    'Token': string // Cryptographically secure unique token (UUID v4)
+    'Email'?: string // Optional email address for the team member
+    'Is Active': boolean // Whether this token is valid
+    'Last Accessed'?: string // ISO timestamp of last page access
+    'Access Count': number // Number of times the page was accessed
+    'Created': string // ISO timestamp
+    'Last Modified': string // ISO timestamp
+  }
+}
+
+/**
  * Type union of all record types for type safety
  */
 export type AirtableRecord =
@@ -327,6 +353,7 @@ export type AirtableRecord =
   | CalendarEventRecord
   | EmailPreferencesRecord
   | TaskRecord
+  | TeamMemberTokenRecord
 
 /**
  * Field name mappings for easier access
@@ -465,5 +492,13 @@ export const FIELD_NAMES = {
     SOURCE_ACTION_ITEM_ID: 'Source Action Item ID',
     SOURCE_MEETING_ID: 'Source Meeting ID',
     COMPLETED_DATE: 'Completed Date',
+  },
+  TEAM_MEMBER_TOKENS: {
+    ASSIGNEE_NAME: 'Assignee Name',
+    TOKEN: 'Token',
+    EMAIL: 'Email',
+    IS_ACTIVE: 'Is Active',
+    LAST_ACCESSED: 'Last Accessed',
+    ACCESS_COUNT: 'Access Count',
   },
 } as const

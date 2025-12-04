@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import type { Task } from '../page'
-import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TertiaryGroup {
   key: string
@@ -110,9 +109,6 @@ function TaskRow({
         <div className={`text-xs font-medium truncate ${task.status === 'Completed' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
           {task.name}
         </div>
-        {getMeaningfulDescription(task.description) && (
-          <div className="text-[10px] text-gray-500 truncate mt-0.5">{getMeaningfulDescription(task.description)}</div>
-        )}
       </div>
 
       {/* Assignee */}

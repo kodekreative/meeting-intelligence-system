@@ -3,7 +3,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Task } from '../page'
-import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskCardProps {
   task: Task
@@ -142,11 +141,6 @@ export function TaskCard({ task, onStatusChange, onClick, compact, isDragging }:
           >
             {task.name}
           </div>
-          {getMeaningfulDescription(task.description) && (
-            <div className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">
-              {getMeaningfulDescription(task.description)}
-            </div>
-          )}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className={`text-[10px] px-1.5 py-0.5 rounded border ${getPriorityColor(task.priority)}`}>
               {task.priority}

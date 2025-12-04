@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import type { Task } from '../page'
-import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskKanbanProps {
   tasks: Task[]
@@ -170,13 +169,6 @@ export function TaskKanban({ tasks, onStatusChange, onTaskClick }: TaskKanbanPro
                     <div className={`text-xs font-medium ${task.status === 'Completed' ? 'line-through text-gray-500' : 'text-gray-900'} mb-1`}>
                       {task.name}
                     </div>
-
-                    {/* Task Description Preview */}
-                    {getMeaningfulDescription(task.description) && (
-                      <div className="text-[10px] text-gray-500 line-clamp-2 mb-2">
-                        {getMeaningfulDescription(task.description)}
-                      </div>
-                    )}
 
                     {/* Badges row */}
                     <div className="flex items-center gap-1.5 flex-wrap pt-1">

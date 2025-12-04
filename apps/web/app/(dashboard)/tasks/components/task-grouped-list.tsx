@@ -1,7 +1,6 @@
 'use client'
 
 import type { Task } from '../page'
-import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskGroupedListProps {
   groupedTasks: [string, Task[]][]
@@ -118,16 +117,11 @@ export function TaskGroupedList({ groupedTasks, groupBy, onStatusChange, onTaskC
                   />
                 </div>
 
-                {/* Task Name & Description */}
+                {/* Task Name */}
                 <div className="min-w-0">
                   <div className={`font-medium ${task.status === 'Completed' ? 'line-through text-gray-500' : 'text-gray-900'} truncate`} title={task.name}>
                     {task.name}
                   </div>
-                  {getMeaningfulDescription(task.description) && (
-                    <div className="text-[10px] text-gray-500 truncate mt-0.5" title={getMeaningfulDescription(task.description)}>
-                      {getMeaningfulDescription(task.description)}
-                    </div>
-                  )}
                   {/* Show meeting title if not grouping by meeting */}
                   {groupBy !== 'meeting' && task.sourceMeetingTitle && (
                     <div className="text-[9px] text-purple-600 truncate mt-0.5" title={task.sourceMeetingTitle}>

@@ -31,6 +31,7 @@ import themesRouter from './routes/themes.js'
 import tasksRouter from './routes/tasks.js'
 import stacksRouter from './routes/stacks.js'
 import boardsRouter from './routes/boards.js'
+import teamMemberTasksRouter from './routes/team-member-tasks.js'
 
 // Load environment variables from root
 dotenv.config({ path: '../../.env' })
@@ -120,6 +121,7 @@ function configureRoutes(app: Express): void {
   app.use(`${API_PREFIX}/tasks`, tasksRouter)
   app.use(`${API_PREFIX}/stacks`, stacksRouter)
   app.use(`${API_PREFIX}/boards`, boardsRouter)
+  app.use(`${API_PREFIX}/team-tasks`, teamMemberTasksRouter)
 
   // 404 handler
   app.use('*', (req, res) => {

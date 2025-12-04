@@ -1,7 +1,6 @@
 'use client'
 
 import type { Task } from '../page'
-import { getMeaningfulDescription } from '../utils/description-filter'
 
 interface TaskListProps {
   tasks: Task[]
@@ -84,16 +83,11 @@ export function TaskList({ tasks, onStatusChange, onTaskClick }: TaskListProps) 
               />
             </div>
 
-            {/* Task Name & Description */}
+            {/* Task Name */}
             <div>
               <div className={`font-medium ${task.status === 'Completed' ? 'line-through text-gray-500' : 'text-gray-900'} truncate`} title={task.name}>
                 {task.name}
               </div>
-              {getMeaningfulDescription(task.description) && (
-                <div className="text-[10px] text-gray-500 truncate mt-0.5" title={getMeaningfulDescription(task.description)}>
-                  {getMeaningfulDescription(task.description)}
-                </div>
-              )}
             </div>
 
             {/* Status */}

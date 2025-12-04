@@ -224,7 +224,7 @@ export function TaskDetailModal({
                   Source Meeting
                 </div>
                 <Link
-                  href={`/intelligence?meeting=${task.sourceMeetingId}`}
+                  href={`/meetings/${task.sourceMeetingId}`}
                   className="text-xs text-purple-700 hover:text-purple-900 underline"
                   onClick={onClose}
                 >
