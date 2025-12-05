@@ -13,7 +13,7 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist node_modules",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "npm run build && node scripts/fix-esm-imports.mjs"
   },
   "dependencies": {
     "@azure/msal-node": "^2.5.1",
