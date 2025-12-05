@@ -464,12 +464,12 @@ export default function TasksPage() {
     )
   }
 
-  // Count tasks by status for summary
+  // Count tasks by status for summary - use rawTasks to show true totals
   const statusCounts = {
-    Open: tasks.filter(t => t.status === 'Open').length,
-    'In Progress': tasks.filter(t => t.status === 'In Progress').length,
-    Blocked: tasks.filter(t => t.status === 'Blocked').length,
-    Done: tasks.filter(t => t.status === 'Completed').length,
+    Open: rawTasks.filter(t => t.status === 'Open').length,
+    'In Progress': rawTasks.filter(t => t.status === 'In Progress').length,
+    Blocked: rawTasks.filter(t => t.status === 'Blocked').length,
+    Completed: rawTasks.filter(t => t.status === 'Completed').length,
   }
 
   return (
@@ -668,8 +668,8 @@ export default function TasksPage() {
             <span className="font-medium text-red-600">{statusCounts.Blocked}</span>
           </div>
           <div className="text-xs">
-            <span className="text-gray-500">Done:</span>{' '}
-            <span className="font-medium text-green-600">{statusCounts.Done}</span>
+            <span className="text-gray-500">Completed:</span>{' '}
+            <span className="font-medium text-green-600">{statusCounts.Completed}</span>
           </div>
         </div>
       </div>
