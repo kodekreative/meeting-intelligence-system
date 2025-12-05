@@ -32,6 +32,7 @@ export interface MeetingRecord {
     'Session ID'?: string // Read.ai session identifier
     'Title'?: string // Meeting title
     'Start Time'?: string // ISO date string for meeting start
+    'Meeting Date'?: string // Optional legacy meeting date field
     'Participants'?: string // Comma-separated participant names
     'Owner Name'?: string // Meeting owner
     'Owner Email'?: string // Owner's email address
@@ -43,6 +44,8 @@ export interface MeetingRecord {
     'Chapter Summaries'?: string // Chapter-by-chapter summaries
     'Transcript Speakers'?: string // Speaker identification
     'Speaker Blocks'?: string // Speaker-attributed transcript blocks
+    'Company'?: string[] // Linked companies (lookup)
+    'Processing Status'?: string // Read.ai processing state
   }
 }
 

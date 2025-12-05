@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express'
-import { emailService} from '../services/email.service.js'
+import { emailService } from '../services/email.service.js'
 import { getAirtableClient } from '../lib/client.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * POST /api/email/test
@@ -26,13 +26,13 @@ router.post('/test', async (req: Request, res: Response) => {
       text: 'Success! Your Gmail SMTP configuration is working correctly.',
     })
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Test email sent successfully' },
     })
   } catch (error: any) {
     console.error('Error sending test email:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: {
         message: error.message || 'Failed to send test email',
@@ -74,7 +74,7 @@ router.post('/meeting-prep', async (req: Request, res: Response) => {
     // Send the meeting prep email
     await emailService.sendMeetingPrepEmail(to, todaysMeetings, targetDate)
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         message: 'Meeting prep email sent successfully',
@@ -84,7 +84,7 @@ router.post('/meeting-prep', async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error('Error sending meeting prep email:', error)
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: {
         message: error.message || 'Failed to send meeting prep email',
