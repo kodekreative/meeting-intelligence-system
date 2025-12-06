@@ -5,7 +5,7 @@
 
 import { Router } from 'express'
 
-const router = Router()
+const router: Router = Router()
 
 // TODO: Implement Microsoft OAuth flow
 router.get('/login', (req, res) => {

@@ -8,7 +8,7 @@ import { asyncHandler } from '../middleware/errorHandler.js'
 import { cacheGet, cacheSet } from '../utils/redis.js'
 import { CACHE } from '../shared/constants.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * GET /api/v1/dashboard/today
@@ -73,15 +73,27 @@ router.get(
 
     // Build dashboard response
     const dashboard = {
-      meetings: meetings.map((m) => ({
-        id: m.id,
-        meetingDate: m.fields['Meeting Date'],
-        title: m.fields.Name,
-        participants: m.fields.Participants?.split(',').map((p) => p.trim()) || [],
-        companyId: m.fields.Company?.[0],
-        summary: m.fields.Summary,
-        topics: m.fields.Topics || [],
-      })),
+      meetings: meetings.map((m) => {
+        const participants = m.fields.Participants
+          ? m.fields.Participants.split(',').map((p) => p.trim())
+          : []
+        const topicsRaw = m.fields.Topics
+        const topics = Array.isArray(topicsRaw)
+          ? topicsRaw
+          : typeof topicsRaw === 'string'
+            ? topicsRaw.split(',').map((topic) => topic.trim())
+            : []
+
+        return {
+          id: m.id,
+          meetingDate: m.fields['Meeting Date'],
+          title: m.fields.Name,
+          participants,
+          companyId: m.fields.Company?.[0],
+          summary: m.fields['Meeting Summary'] ?? null,
+          topics,
+        }
+      }),
       myActionItems: {
         dueToday: actionItemsDueToday.map((item) => ({
           id: item.id,
@@ -108,14 +120,14 @@ router.get(
       businessIssues: businessIssues.slice(0, 5).map((issue) => ({
         id: issue.id,
         issueDescription: issue.fields['Issue Description'],
-        companyId: issue.fields.Company[0],
+        companyId: issue.fields.Company?.[0] ?? null,
         category: issue.fields.Category,
         severity: issue.fields.Severity,
         dateIdentified: issue.fields['Date Identified'],
       })),
       personalFollowUps: personalIntel.slice(0, 5).map((intel) => ({
         id: intel.id,
-        contactId: intel.fields.Contact[0],
+        contactId: intel.fields.Contact?.[0] ?? null,
         detailDescription: intel.fields['Detail Description'],
         category: intel.fields.Category,
         reminderDate: intel.fields['Reminder Date'],

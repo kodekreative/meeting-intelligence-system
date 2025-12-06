@@ -88,6 +88,8 @@ export class AirtableClient {
   async getMeetings(options?: {
     fromDate?: Date
     toDate?: Date
+    companyId?: string
+    processingStatus?: string
     maxRecords?: number
   }): Promise<MeetingRecord[]> {
     let filterFormula = ''
@@ -98,6 +100,12 @@ export class AirtableClient {
     }
     if (options?.toDate) {
       filters.push(`IS_BEFORE({Start Time}, '${options.toDate.toISOString()}')`)
+    }
+    if (options?.companyId) {
+      filters.push(`FIND('${options.companyId}', {Company})`)
+    }
+    if (options?.processingStatus) {
+      filters.push(`{Processing Status} = '${options.processingStatus}'`)
     }
 
     if (filters.length > 0) {
