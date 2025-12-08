@@ -21,6 +21,8 @@ export const AIRTABLE_TABLES = {
   EMAIL_PREFERENCES: 'Email Preferences',
   TASKS: 'Tasks',
   TEAM_MEMBER_TOKENS: 'Team Member Tokens',
+  TASK_COMMENTS: 'Task Comments',
+  TASK_ACTIVITY: 'Task Activity',
 } as const
 
 /**
@@ -308,6 +310,9 @@ export interface TaskRecord {
     'Source Action Item ID'?: string // ID of originating action item
     'Source Meeting ID'?: string // ID of originating meeting
     'Completed Date'?: string // ISO date when marked Done
+    'Reminder Date'?: string // ISO date when to send reminder
+    'Parent Task ID'?: string // ID of parent task (for subtasks)
+    'Assignee Name'?: string // Denormalized assignee name for filtering
   }
 }
 
@@ -331,8 +336,53 @@ export interface TeamMemberTokenRecord {
     'Is Active': boolean // Whether this token is valid
     'Last Accessed'?: string // ISO timestamp of last page access
     'Access Count': number // Number of times the page was accessed
+    'Reminder Frequency'?: 'daily' | 'weekly' | 'none' // How often to send task reminders
     'Created': string // ISO timestamp
     'Last Modified': string // ISO timestamp
+  }
+}
+
+/**
+ * Task Comments Table
+ * Comments and questions on tasks from team members or admins
+ *
+ * Used for:
+ * - Team members asking questions about tasks
+ * - Admins providing clarification or updates
+ * - Communication thread history
+ */
+export interface TaskCommentRecord {
+  id: string
+  fields: {
+    'Task ID': string // ID of the task being commented on
+    'Task Table': 'Tasks' | 'Action Items' // Which table the task is in
+    'Author Name': string // Name of the commenter
+    'Author Type': 'team_member' | 'admin' // Who created the comment
+    'Content': string // The comment text
+    'Created At': string // ISO timestamp
+  }
+}
+
+/**
+ * Task Activity Table
+ * Tracks all changes made to tasks for audit/history purposes
+ *
+ * Used for:
+ * - Showing task history timeline
+ * - Audit trail of changes
+ * - Understanding task progression
+ */
+export interface TaskActivityRecord {
+  id: string
+  fields: {
+    'Task ID': string // ID of the task
+    'Task Table': 'Tasks' | 'Action Items' // Which table the task is in
+    'Action': 'created' | 'status_changed' | 'priority_changed' | 'note_added' | 'help_requested' | 'extension_requested' | 'comment_added' | 'blocker_added'
+    'Old Value'?: string // Previous value (for changes)
+    'New Value'?: string // New value (for changes)
+    'Actor Name': string // Who made the change
+    'Actor Type': 'team_member' | 'admin' | 'system' // Type of actor
+    'Created At': string // ISO timestamp
   }
 }
 
@@ -354,6 +404,8 @@ export type AirtableRecord =
   | EmailPreferencesRecord
   | TaskRecord
   | TeamMemberTokenRecord
+  | TaskCommentRecord
+  | TaskActivityRecord
 
 /**
  * Field name mappings for easier access
@@ -486,12 +538,15 @@ export const FIELD_NAMES = {
     STATUS: 'Status',
     PRIORITY: 'Priority',
     ASSIGNEE: 'Assignee',
+    ASSIGNEE_NAME: 'Assignee Name',
     DUE_DATE: 'Due Date',
     COMPANY: 'Company',
     SOURCE: 'Source',
     SOURCE_ACTION_ITEM_ID: 'Source Action Item ID',
     SOURCE_MEETING_ID: 'Source Meeting ID',
     COMPLETED_DATE: 'Completed Date',
+    REMINDER_DATE: 'Reminder Date',
+    PARENT_TASK_ID: 'Parent Task ID',
   },
   TEAM_MEMBER_TOKENS: {
     ASSIGNEE_NAME: 'Assignee Name',
@@ -500,5 +555,24 @@ export const FIELD_NAMES = {
     IS_ACTIVE: 'Is Active',
     LAST_ACCESSED: 'Last Accessed',
     ACCESS_COUNT: 'Access Count',
+    REMINDER_FREQUENCY: 'Reminder Frequency',
+  },
+  TASK_COMMENTS: {
+    TASK_ID: 'Task ID',
+    TASK_TABLE: 'Task Table',
+    AUTHOR_NAME: 'Author Name',
+    AUTHOR_TYPE: 'Author Type',
+    CONTENT: 'Content',
+    CREATED_AT: 'Created At',
+  },
+  TASK_ACTIVITY: {
+    TASK_ID: 'Task ID',
+    TASK_TABLE: 'Task Table',
+    ACTION: 'Action',
+    OLD_VALUE: 'Old Value',
+    NEW_VALUE: 'New Value',
+    ACTOR_NAME: 'Actor Name',
+    ACTOR_TYPE: 'Actor Type',
+    CREATED_AT: 'Created At',
   },
 } as const

@@ -3,7 +3,22 @@
  * Type-safe client for backend API requests
  */
 
-import type { ApiResponse, Theme, CreateThemeInput, UpdateThemeInput, TagMeetingInput, TagCompanyInput, ThemeMetrics, ThemeMeeting, ThemeSummary } from './types'
+import type {
+  ApiResponse,
+  Theme,
+  CreateThemeInput,
+  UpdateThemeInput,
+  TagMeetingInput,
+  TagCompanyInput,
+  ThemeMetrics,
+  ThemeMeeting,
+  ThemeSummary,
+  AdvisorSuggestionsResponse,
+  AdvisorRecord,
+  AskAdvisorInput,
+  UpdateAdvisorInput,
+  AdvisorHistoryResponse,
+} from './types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 const API_BASE = `${API_URL}/api/v1`
@@ -345,5 +360,62 @@ export const apiClient = {
         method: 'DELETE',
       }),
     getLists: (boardId: string) => fetchApi(`/boards/${boardId}/lists`),
+  },
+
+  // Theme Advisor
+  advisor: {
+    getSuggestions: (themeId: string) =>
+      fetchApi<AdvisorSuggestionsResponse>(`/themes/${themeId}/advisor/suggestions`, {
+        method: 'POST',
+      }),
+    refreshSuggestions: (themeId: string) =>
+      fetchApi<AdvisorSuggestionsResponse>(`/themes/${themeId}/advisor/suggestions?refresh=true`, {
+        method: 'POST',
+      }),
+    ask: (themeId: string, input: AskAdvisorInput) =>
+      fetchApi<AdvisorRecord>(`/themes/${themeId}/advisor/ask`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    getHistory: (themeId: string, params?: { limit?: number; offset?: number; pinnedOnly?: boolean; search?: string }) => {
+      const query = params ? new URLSearchParams(
+        Object.entries(params)
+          .filter(([_, val]) => val !== undefined && val !== '')
+          .reduce((acc, [key, val]) => ({ ...acc, [key]: String(val) }), {})
+      ) : ''
+      return fetchApi<AdvisorHistoryResponse>(`/themes/${themeId}/advisor/history${query ? `?${query}` : ''}`)
+    },
+    update: (themeId: string, recordId: string, input: UpdateAdvisorInput) =>
+      fetchApi(`/themes/${themeId}/advisor/${recordId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+  },
+
+  // Meeting Series Intelligence
+  meetingSeries: {
+    generateThemes: (seriesName: string) =>
+      fetchApi<{
+        seriesName: string
+        suggestions: Array<{
+          name: string
+          description: string
+          confidence: 'high' | 'medium' | 'low'
+          basedOn: string
+        }>
+        generatedAt: string
+      }>(`/meeting-series/${encodeURIComponent(seriesName)}/generate-themes`, {
+        method: 'POST',
+      }),
+    research: (seriesName: string, question: string) =>
+      fetchApi<{
+        question: string
+        answer: string
+        meetingsReferenced: string[]
+        createdAt: string
+      }>(`/meeting-series/${encodeURIComponent(seriesName)}/research`, {
+        method: 'POST',
+        body: JSON.stringify({ question }),
+      }),
   },
 }
