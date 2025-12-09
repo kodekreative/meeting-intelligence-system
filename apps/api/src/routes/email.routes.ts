@@ -4,7 +4,7 @@ import { getAirtableClient } from '../lib/client.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { schedulerService } from '../services/scheduler.service.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * POST /api/email/test

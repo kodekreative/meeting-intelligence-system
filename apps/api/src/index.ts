@@ -32,7 +32,6 @@ import tasksRouter from './routes/tasks.js'
 import stacksRouter from './routes/stacks.js'
 import boardsRouter from './routes/boards.js'
 import teamMemberTasksRouter from './routes/team-member-tasks.js'
-import themeAdvisorRouter from './routes/theme-advisor.routes.js'
 import meetingIntelligenceRouter from './routes/meeting-intelligence.routes.js'
 
 // Load environment variables from root
@@ -120,7 +119,6 @@ function configureRoutes(app: Express): void {
   app.use(`${API_PREFIX}/dashboard`, dashboardRouter)
   app.use(`${API_PREFIX}/email`, emailRouter)
   app.use(`${API_PREFIX}/themes`, themesRouter)
-  app.use(`${API_PREFIX}/themes`, themeAdvisorRouter)
   app.use(`${API_PREFIX}/tasks`, tasksRouter)
   app.use(`${API_PREFIX}/stacks`, stacksRouter)
   app.use(`${API_PREFIX}/boards`, boardsRouter)

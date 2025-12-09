@@ -21,7 +21,7 @@ import { AIRTABLE_TABLES } from '../lib/schema.js'
 import { CACHE, TASKS } from '../shared/constants.js'
 import { cacheDeletePattern } from '../utils/redis.js'
 
-const router = Router()
+const router: Router = Router()
 
 // Name mapping cache - loaded dynamically from Team Member Tokens table
 // The "Full Name" field in Team Member Tokens is the source of truth

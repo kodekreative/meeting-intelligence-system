@@ -8,7 +8,7 @@ import { microsoftAuthService } from '../services/microsoft-auth.service.js'
 import { calendarService } from '../services/calendar.service.js'
 import { logger } from '../utils/logger.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * Initiate OAuth login flow

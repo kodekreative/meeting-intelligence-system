@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import Airtable from 'airtable'
 
-const router = Router()
+const router: Router = Router()
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY!
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID!
@@ -118,15 +118,15 @@ router.patch('/:id', async (req: Request, res: Response) => {
       updates['Is Default'] = false
     }
 
-    const record = await base('Task Boards').update(req.params.id, updates)
+    const record = await base('Task Boards').update(req.params.id, { fields: updates as any })
 
     const board = {
       id: record.id,
-      name: record.get('Name') as string,
-      description: record.get('Description') as string | undefined,
-      order: record.get('Order') as number | undefined,
-      ownerId: record.get('Owner ID') as string | undefined,
-      isDefault: record.get('Is Default') as boolean | undefined,
+      name: (record as any).get('Name') as string,
+      description: (record as any).get('Description') as string | undefined,
+      order: (record as any).get('Order') as number | undefined,
+      ownerId: (record as any).get('Owner ID') as string | undefined,
+      isDefault: (record as any).get('Is Default') as boolean | undefined,
     }
 
     res.json({ success: true, data: board })

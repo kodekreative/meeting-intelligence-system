@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -26,7 +26,7 @@ interface TitleGroup {
   allTopics: string[]
 }
 
-export default function CompaniesPage() {
+function CompaniesPage() {
   const searchParams = useSearchParams()
   const titleFromUrl = searchParams.get('title')
   const [expandedTitles, setExpandedTitles] = useState<Set<string>>(new Set())
@@ -328,5 +328,13 @@ export default function CompaniesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading…</div>}>
+      <CompaniesPage />
+    </Suspense>
   )
 }

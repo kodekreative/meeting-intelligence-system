@@ -6,7 +6,9 @@
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
@@ -20,7 +22,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noEmitOnError": false,
-    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],

@@ -11,7 +11,7 @@ import { CACHE, TASKS } from '../shared/constants.js'
 import { AIRTABLE_TABLES } from '../lib/schema.js'
 import { createTaskSchema, updateTaskSchema } from '../shared/schemas.js'
 
-const router = Router()
+const router: Router = Router()
 
 // Name mapping for team members (partial name -> full name)
 // This maps partial names from Action Items to full names
@@ -613,7 +613,7 @@ router.post(
 
     // Create in Airtable
     const base = getBase()
-    const record = await base(AIRTABLE_TABLES.TASKS).create(fields)
+    const record = await base(AIRTABLE_TABLES.TASKS).create({ fields: fields as any })
 
     // Invalidate cache
     await cacheDeletePattern(`${CACHE.KEYS.TASKS}:*`)
@@ -627,7 +627,7 @@ router.post(
         assigneeName = userRecord.get('Full Name') as string
       } catch {
         // Fallback to lookup field if user fetch fails
-        assigneeName = record.get('Assignee Name') as string | undefined
+        assigneeName = (record as any).get('Assignee Name') as string | undefined
       }
     } else if (validatedData.assigneeName) {
       // Custom name provided directly
@@ -642,25 +642,25 @@ router.post(
         sourceMeetingTitle = (meetingRecord.get('Title') as string) || (meetingRecord.get('Name') as string) || 'Untitled Meeting'
       } catch {
         // Fallback to lookup field if meeting fetch fails
-        sourceMeetingTitle = record.get('Source Meeting Title') as string | undefined
+        sourceMeetingTitle = (record as any).get('Source Meeting Title') as string | undefined
       }
     }
 
     const task = {
-      id: record.id,
-      name: record.get('Name') as string,
-      description: record.get('Description') as string | undefined,
-      status: record.get('Status') as string,
-      priority: record.get('Priority') as string,
-      assigneeId: (record.get('Assignee') as string[] | undefined)?.[0],
+      id: (record as any).id,
+      name: (record as any).get('Name') as string,
+      description: (record as any).get('Description') as string | undefined,
+      status: (record as any).get('Status') as string,
+      priority: (record as any).get('Priority') as string,
+      assigneeId: ((record as any).get('Assignee') as string[] | undefined)?.[0],
       assigneeName,
-      dueDate: record.get('Due Date') as string | undefined,
-      companyId: (record.get('Company') as string[] | undefined)?.[0],
-      source: record.get('Source') as string,
-      sourceActionItemId: record.get('Source Action Item ID') as string | undefined,
-      sourceMeetingId: record.get('Source Meeting ID') as string | undefined,
+      dueDate: (record as any).get('Due Date') as string | undefined,
+      companyId: ((record as any).get('Company') as string[] | undefined)?.[0],
+      source: (record as any).get('Source') as string,
+      sourceActionItemId: (record as any).get('Source Action Item ID') as string | undefined,
+      sourceMeetingId: (record as any).get('Source Meeting ID') as string | undefined,
       sourceMeetingTitle,
-      completedDate: record.get('Completed Date') as string | undefined,
+      completedDate: (record as any).get('Completed Date') as string | undefined,
     }
 
     res.status(201).json({
@@ -719,24 +719,24 @@ router.patch(
     const base = getBase()
 
     try {
-      const record = await base(AIRTABLE_TABLES.TASKS).update(id, fields)
+      const record = await base(AIRTABLE_TABLES.TASKS).update(id, { fields: fields as any })
 
       // Invalidate cache
       await cacheDeletePattern(`${CACHE.KEYS.TASKS}:*`)
 
       const task = {
-        id: record.id,
-        name: record.get('Name') as string,
-        description: record.get('Description') as string | undefined,
-        status: record.get('Status') as string,
-        priority: record.get('Priority') as string,
-        assigneeId: (record.get('Assignee') as string[] | undefined)?.[0],
-        dueDate: record.get('Due Date') as string | undefined,
-        companyId: (record.get('Company') as string[] | undefined)?.[0],
-        source: record.get('Source') as string,
-        sourceActionItemId: record.get('Source Action Item ID') as string | undefined,
-        sourceMeetingId: record.get('Source Meeting ID') as string | undefined,
-        completedDate: record.get('Completed Date') as string | undefined,
+        id: (record as any).id,
+        name: (record as any).get('Name') as string,
+        description: (record as any).get('Description') as string | undefined,
+        status: (record as any).get('Status') as string,
+        priority: (record as any).get('Priority') as string,
+        assigneeId: ((record as any).get('Assignee') as string[] | undefined)?.[0],
+        dueDate: (record as any).get('Due Date') as string | undefined,
+        companyId: ((record as any).get('Company') as string[] | undefined)?.[0],
+        source: (record as any).get('Source') as string,
+        sourceActionItemId: (record as any).get('Source Action Item ID') as string | undefined,
+        sourceMeetingId: (record as any).get('Source Meeting ID') as string | undefined,
+        completedDate: (record as any).get('Completed Date') as string | undefined,
       }
 
       res.json({

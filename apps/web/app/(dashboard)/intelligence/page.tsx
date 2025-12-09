@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 interface Meeting {
@@ -18,7 +18,7 @@ interface Meeting {
   reportUrl?: string
 }
 
-export default function IntelligencePage() {
+function IntelligencePage() {
   const searchParams = useSearchParams()
   const meetingIdParam = searchParams.get('meeting')
 
@@ -327,5 +327,13 @@ export default function IntelligencePage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading…</div>}>
+      <IntelligencePage />
+    </Suspense>
   )
 }

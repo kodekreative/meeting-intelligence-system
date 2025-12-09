@@ -4,7 +4,7 @@
  */
 
 import { Client } from '@microsoft/microsoft-graph-client'
-import { Event as GraphEvent } from '@microsoft/microsoft-graph-types'
+// import { Event as GraphEvent } from '@microsoft/microsoft-graph-types'
 import { microsoftAuthService, TokenSet } from './microsoft-auth.service.js'
 import { getAirtableClient } from '../lib/client.js'
 import { logger } from '../utils/logger.js'
@@ -96,7 +96,7 @@ class CalendarService {
   private async fetchCalendarEvents(
     graphClient: Client,
     daysAhead: number
-  ): Promise<GraphEvent[]> {
+  ): Promise<any[]> {
     const startDate = new Date()
     const endDate = new Date()
     endDate.setDate(endDate.getDate() + daysAhead)
@@ -133,7 +133,7 @@ class CalendarService {
   /**
    * Transform Microsoft Graph event to our calendar event format
    */
-  private transformGraphEvent(graphEvent: GraphEvent): CalendarEvent {
+  private transformGraphEvent(graphEvent: any): CalendarEvent {
     return {
       id: graphEvent.id || '',
       subject: graphEvent.subject || 'Untitled Event',
@@ -160,7 +160,7 @@ class CalendarService {
   ): Promise<boolean> {
     try {
       // Check if event already exists
-      const existingEvents = await airtableClient.findRecords('Calendar Events', {
+      const existingEvents = await getAirtableClient().findRecords('Calendar Events', {
         filterByFormula: `{Calendar Event ID} = '${event.id}'`,
       })
 
@@ -181,11 +181,11 @@ class CalendarService {
 
       if (existingEvents.length > 0) {
         // Update existing event
-        await airtableClient.updateRecord('Calendar Events', existingEvents[0].id, eventData)
+        await getAirtableClient().updateRecord('Calendar Events', existingEvents[0].id, eventData)
         return false
       } else {
         // Create new event
-        await airtableClient.createRecord('Calendar Events', eventData)
+        await getAirtableClient().createRecord('Calendar Events', eventData)
         return true
       }
     } catch (error) {
@@ -202,7 +202,7 @@ class CalendarService {
       const endDate = new Date()
       endDate.setDate(endDate.getDate() + days)
 
-      const records = await airtableClient.findRecords('Calendar Events', {
+      const records = await getAirtableClient().findRecords('Calendar Events', {
         filterByFormula: `AND(
           FIND('${userId}', ARRAYJOIN({User})) > 0,
           IS_AFTER({Start Time}, NOW()),
@@ -235,7 +235,7 @@ class CalendarService {
    */
   private async updateLastSyncTime(userId: string): Promise<void> {
     try {
-      await airtableClient.updateRecord('Users', userId, {
+      await getAirtableClient().updateRecord('Users', userId, {
         'Last Calendar Sync': new Date().toISOString(),
       })
     } catch (error) {
@@ -248,7 +248,7 @@ class CalendarService {
    */
   async getUserAccessToken(userId: string): Promise<string | null> {
     try {
-      const userRecord = await airtableClient.getRecord('Users', userId)
+      const userRecord = await getAirtableClient().getRecord('Users', userId)
 
       if (!userRecord.fields['Microsoft Access Token']) {
         return null
@@ -285,7 +285,7 @@ class CalendarService {
    */
   async saveUserTokens(userId: string, tokens: TokenSet): Promise<void> {
     try {
-      await airtableClient.updateRecord('Users', userId, {
+      await getAirtableClient().updateRecord('Users', userId, {
         'Microsoft Access Token': microsoftAuthService.encryptToken(tokens.accessToken),
         'Microsoft Refresh Token': tokens.refreshToken
           ? microsoftAuthService.encryptToken(tokens.refreshToken)
@@ -306,7 +306,7 @@ class CalendarService {
    */
   async disconnectCalendar(userId: string): Promise<void> {
     try {
-      await airtableClient.updateRecord('Users', userId, {
+      await getAirtableClient().updateRecord('Users', userId, {
         'Microsoft Access Token': null,
         'Microsoft Refresh Token': null,
         'Microsoft Token Expires At': null,

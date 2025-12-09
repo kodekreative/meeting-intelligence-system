@@ -8,7 +8,7 @@ import { asyncHandler } from '../middleware/errorHandler.js'
 import { emailService } from '../services/email.js'
 import { getAirtableClient } from '../lib/client.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * POST /api/v1/email/test

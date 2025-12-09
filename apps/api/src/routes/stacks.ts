@@ -1,12 +1,16 @@
 import { Router, Request, Response } from 'express'
 import Airtable from 'airtable'
 
-const router = Router()
+const router: Router = Router()
 
-const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY!
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID!
-
-const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID)
+function getBase() {
+  const apiKey = process.env.AIRTABLE_API_KEY
+  const baseId = process.env.AIRTABLE_BASE_ID
+  if (!apiKey || !baseId || apiKey.includes('placeholder')) {
+    throw new Error('Airtable configuration missing')
+  }
+  return new Airtable({ apiKey }).base(baseId)
+}
 
 // GET /api/v1/stacks - List all stacks (optionally filter by boardId)
 router.get('/', async (req: Request, res: Response) => {
@@ -22,6 +26,7 @@ router.get('/', async (req: Request, res: Response) => {
       selectOptions.filterByFormula = `{Board ID} = "${boardId}"`
     }
 
+    const base = getBase()
     const records = await base('Task Stacks').select(selectOptions).all()
 
     const stacks = records.map((record) => ({
@@ -46,6 +51,7 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/v1/stacks/:id - Get single stack
 router.get('/:id', async (req: Request, res: Response) => {
   try {
+    const base = getBase()
     const record = await base('Task Stacks').find(req.params.id)
 
     const stack = {
@@ -72,6 +78,7 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, type, parentStackId, order, color, isCollapsed, ownerId, boardId } = req.body
 
+    const base = getBase()
     const record = await base('Task Stacks').create({
       'Name': name,
       'Type': type || 'Custom',
@@ -116,18 +123,19 @@ router.patch('/:id', async (req: Request, res: Response) => {
     if (req.body.isCollapsed !== undefined) updates['Is Collapsed'] = req.body.isCollapsed
     if (req.body.ownerId !== undefined) updates['Owner ID'] = req.body.ownerId
 
-    const record = await base('Task Stacks').update(req.params.id, updates)
+    const base = getBase()
+    const record = await base('Task Stacks').update(req.params.id, { fields: updates as any })
 
     const stack = {
-      id: record.id,
-      name: record.get('Name') as string,
-      type: record.get('Type') as string,
-      parentStackId: record.get('Parent Stack ID') as string | undefined,
-      order: record.get('Order') as number | undefined,
-      color: record.get('Color') as string | undefined,
-      isCollapsed: record.get('Is Collapsed') as boolean | undefined,
-      ownerId: record.get('Owner ID') as string | undefined,
-      boardId: record.get('Board ID') as string | undefined,
+      id: (record as any).id,
+      name: (record as any).get('Name') as string,
+      type: (record as any).get('Type') as string,
+      parentStackId: (record as any).get('Parent Stack ID') as string | undefined,
+      order: (record as any).get('Order') as number | undefined,
+      color: (record as any).get('Color') as string | undefined,
+      isCollapsed: (record as any).get('Is Collapsed') as boolean | undefined,
+      ownerId: (record as any).get('Owner ID') as string | undefined,
+      boardId: (record as any).get('Board ID') as string | undefined,
     }
 
     res.json({ success: true, data: stack })
@@ -140,6 +148,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 // DELETE /api/v1/stacks/:id - Delete a stack
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
+    const base = getBase()
     await base('Task Stacks').destroy(req.params.id)
     res.json({ success: true, message: 'Stack deleted' })
   } catch (error) {
@@ -171,6 +180,7 @@ router.post('/bulk-update', async (req: Request, res: Response) => {
         },
       }))
 
+      const base = getBase()
       const records = await base('Task Stacks').update(batch)
       results.push(...records)
     }
@@ -195,14 +205,15 @@ router.post('/assign-task', async (req: Request, res: Response) => {
       updates['Stack Order'] = stackOrder
     }
 
+    const base = getBase()
     const record = await base('Tasks').update(taskId, updates)
 
     res.json({
       success: true,
       data: {
-        id: record.id,
-        stackId: record.get('Stack ID'),
-        stackOrder: record.get('Stack Order'),
+        id: (record as any).id,
+        stackId: (record as any).get('Stack ID'),
+        stackOrder: (record as any).get('Stack Order'),
       },
     })
   } catch (error) {
@@ -233,6 +244,7 @@ router.post('/bulk-assign-tasks', async (req: Request, res: Response) => {
         },
       }))
 
+      const base = getBase()
       const records = await base('Tasks').update(batch)
       results.push(...records)
     }
@@ -250,6 +262,7 @@ router.post('/auto-generate', async (req: Request, res: Response) => {
     const { type } = req.body // 'assignee' or 'meeting'
 
     // Get all tasks
+    const base = getBase()
     const tasks = await base('Tasks').select().all()
 
     // Get existing stacks

@@ -6,9 +6,18 @@
 import OpenAI from 'openai'
 import { logger } from '../utils/logger.js'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+let openai: OpenAI | null = null
+
+function getOpenAI(): OpenAI {
+  if (openai) return openai
+  const key = process.env.OPENAI_API_KEY
+  if (!key) {
+    logger.error('OPENAI_API_KEY is not set')
+    throw new Error('OPENAI_API_KEY is not set')
+  }
+  openai = new OpenAI({ apiKey: key })
+  return openai
+}
 
 export interface ThemeAnalysisInput {
   transcript: string
@@ -71,7 +80,7 @@ IMPORTANT INSTRUCTIONS:
 - Return ONLY the JSON object, no other text`
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
       messages: [
         {
@@ -221,7 +230,7 @@ IMPORTANT:
 - Return ONLY the JSON object, no other text`
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
       messages: [
         {

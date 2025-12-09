@@ -89,7 +89,7 @@ router.get(
           meetingDate: m.fields['Meeting Date'],
           title: m.fields.Name,
           participants,
-          companyId: m.fields.Company?.[0],
+          companyId: (m.fields['Company'] as string[] | undefined)?.[0],
           summary: m.fields['Meeting Summary'] ?? null,
           topics,
         }

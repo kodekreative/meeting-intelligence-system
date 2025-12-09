@@ -823,8 +823,12 @@ export class AirtableClient {
       if (notes !== undefined) {
         updateFields['Notes'] = notes
       }
-      const record = await this.base(AIRTABLE_TABLES.EMAIL_PREFERENCES).update(existing.id, updateFields)
-      return { id: record.id, fields: record.fields as EmailPreferencesRecord['fields'] }
+      const updated = await this.updateRecord<EmailPreferencesRecord['fields']>(
+        AIRTABLE_TABLES.EMAIL_PREFERENCES,
+        existing.id,
+        updateFields as Partial<EmailPreferencesRecord['fields']>
+      )
+      return updated
     } else {
       const createFields: Record<string, unknown> = {
         'Assignee Name': assigneeName,
@@ -833,8 +837,11 @@ export class AirtableClient {
       if (notes !== undefined) {
         createFields['Notes'] = notes
       }
-      const record = await this.base(AIRTABLE_TABLES.EMAIL_PREFERENCES).create(createFields)
-      return { id: record.id, fields: record.fields as EmailPreferencesRecord['fields'] }
+      const created = await this.createRecord<EmailPreferencesRecord['fields']>(
+        AIRTABLE_TABLES.EMAIL_PREFERENCES,
+        createFields as Partial<EmailPreferencesRecord['fields']>
+      )
+      return created
     }
   }
 
@@ -885,7 +892,8 @@ export class AirtableClient {
       maxRecords?: number
     }
   ): Promise<Array<{ id: string; fields: T }>> {
-    return this.fetchWithRetry<T>(tableName, options) as Promise<Array<{ id: string; fields: T }>>
+    const records = await this.fetchWithRetry<T>(tableName, options)
+    return records.map((r) => ({ id: r.id, fields: r.fields as T }))
   }
 
   /**

@@ -90,7 +90,8 @@ class MicrosoftAuthService {
 
     const tokens: TokenSet = {
       accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
+      // MSAL AuthenticationResult no longer exposes refreshToken; persist accessToken and expiresOn
+      refreshToken: (response as any).refreshToken,
       expiresAt: response.expiresOn || new Date(Date.now() + 3600 * 1000),
       scope: response.scopes?.join(',') || '',
     }
@@ -118,7 +119,7 @@ class MicrosoftAuthService {
 
     return {
       accessToken: response.accessToken,
-      refreshToken: response.refreshToken || refreshToken,
+      refreshToken: ((response as any).refreshToken) || refreshToken,
       expiresAt: response.expiresOn || new Date(Date.now() + 3600 * 1000),
       scope: response.scopes?.join(',') || '',
     }

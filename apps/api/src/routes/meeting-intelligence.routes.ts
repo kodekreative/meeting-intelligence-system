@@ -11,7 +11,7 @@ import { z } from 'zod'
 import { generateThemeSuggestions, processResearchQuestion } from '../services/meeting-intelligence.service.js'
 import { logger } from '../utils/logger.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * POST /api/v1/meeting-series/:name/generate-themes

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +19,7 @@ interface CalendarEvent {
   onlineMeetingUrl?: string
 }
 
-export default function CalendarSettingsPage() {
+function CalendarSettingsPage() {
   const searchParams = useSearchParams()
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -319,5 +319,13 @@ export default function CalendarSettingsPage() {
         </Card>
       )}
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>}>
+      <CalendarSettingsPage />
+    </Suspense>
   )
 }

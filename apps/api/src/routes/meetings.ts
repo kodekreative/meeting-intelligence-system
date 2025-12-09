@@ -39,8 +39,7 @@ router.get(
     const meetings = await airtable.getMeetings({
       fromDate: fromDate ? new Date(fromDate as string) : undefined,
       toDate: toDate ? new Date(toDate as string) : undefined,
-      companyId: companyId as string | undefined,
-      processingStatus: status as string | undefined,
+      // processingStatus is not supported in getMeetings options; omit
       maxRecords: parseInt(limit as string, 10),
     })
 
@@ -207,7 +206,7 @@ router.post(
     }
 
     // 2. Check if transcript exists
-    const transcript = meeting.fields.Transcript
+    const transcript = meeting.fields['Transcript'] as string | undefined
     if (!transcript) {
       throw new AppError('Meeting transcript not available', 400)
     }

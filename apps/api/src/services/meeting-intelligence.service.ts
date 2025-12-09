@@ -72,7 +72,7 @@ async function getMeetingSeriesContext(seriesName: string): Promise<{
   const meetingIds = new Set(seriesMeetings.map(m => m.id))
   const relatedActionItems = allActionItems
     .filter(ai => {
-      const meetingLinks = ai.fields['Meeting'] || ai.fields['meeting'] || []
+      const meetingLinks = (ai.fields['Source Meeting'] as string[] | undefined) || (ai.fields['Meeting'] as string[] | undefined) || []
       return meetingLinks.some((mid: string) => meetingIds.has(mid))
     })
     .slice(0, 50)
@@ -87,9 +87,9 @@ async function getMeetingSeriesContext(seriesName: string): Promise<{
     })),
     actionItems: relatedActionItems.map(ai => ({
       id: ai.id,
-      description: ai.fields.Description || ai.fields.description || '',
+      description: (ai.fields['Task Description'] as string) || '',
       status: ai.fields.Status || 'Open',
-      assignee: ai.fields.Assignee || ai.fields.assignee,
+      assignee: ai.fields['Assignee'] as string,
     })),
   }
 }

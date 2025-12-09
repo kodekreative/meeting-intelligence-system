@@ -7,7 +7,7 @@ import { Router, Request, Response } from 'express'
 import { icalendarService } from '../services/icalendar.service.js'
 import { logger } from '../utils/logger.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * Connect calendar using iCalendar URL

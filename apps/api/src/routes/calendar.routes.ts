@@ -7,7 +7,7 @@ import { Router, Request, Response } from 'express'
 import { calendarService } from '../services/calendar.service.js'
 import { logger } from '../utils/logger.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * Sync calendar events for a user

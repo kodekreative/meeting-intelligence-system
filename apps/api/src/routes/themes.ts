@@ -16,7 +16,7 @@ import {
   untagMeetingSchema,
 } from '../shared/schemas.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * GET /api/v1/themes
@@ -146,7 +146,7 @@ router.post(
       description: validatedData.description,
       color_code: validatedData.colorCode,
       icon: validatedData.icon,
-      company_id: validatedData.companyId,
+      company_id: validatedData.companyId ? [validatedData.companyId] : [],
       is_active: true,
       created_at: now,
       updated_at: now,
@@ -354,7 +354,7 @@ router.post(
     const updatedThemes = Array.from(new Set([...currentThemes, ...themeIds]))
 
     // Update via the base directly
-    await airtable.base(AIRTABLE_TABLES.COMPANIES).update(companyId, {
+    await (airtable as any).base(AIRTABLE_TABLES.COMPANIES).update(companyId, {
       theme: updatedThemes,
     } as any)
 
@@ -399,7 +399,7 @@ router.delete(
     const updatedThemes = currentThemes.filter(id => id !== themeId)
 
     // Update
-    await airtable.base(AIRTABLE_TABLES.COMPANIES).update(companyId, {
+    await (airtable as any).base(AIRTABLE_TABLES.COMPANIES).update(companyId, {
       theme: updatedThemes,
     } as any)
 
