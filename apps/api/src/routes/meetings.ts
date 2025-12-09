@@ -9,7 +9,7 @@ import { cacheGet, cacheSet, cacheDelete } from '../utils/redis.js'
 import { CACHE } from '../shared/constants.js'
 import { analyzeMeetingForThemes } from '../services/ai-theme-analysis.service.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * GET /api/v1/meetings
@@ -45,27 +45,29 @@ router.get(
     })
 
     // Transform to API response format
-    const transformedMeetings = meetings.map((meeting) => ({
-      id: meeting.id,
-      startTime: meeting.fields['Start Time'],
-      title: meeting.fields.Title || meeting.fields.Name,
-      participants: meeting.fields.Participants?.split(',').map((p) => p.trim()) || [],
-      ownerName: meeting.fields['Owner Name'],
-      ownerEmail: meeting.fields['Owner Email'],
-      sessionId: meeting.fields['Session ID'],
-      summary: meeting.fields['Meeting Summary'],
-      topics: Array.isArray(meeting.fields.Topics)
-        ? meeting.fields.Topics.join(', ')
-        : (typeof meeting.fields.Topics === 'string' ? meeting.fields.Topics : ''),
-      keyQuestions: Array.isArray(meeting.fields['Key Questions'])
+    const transformedMeetings = meetings.map((meeting) => {
+      return {
+        id: meeting.id,
+        startTime: meeting.fields['Start Time'],
+        title: meeting.fields.Title || meeting.fields.Name,
+        participants: meeting.fields.Participants?.split(',').map((p) => p.trim()) || [],
+        ownerName: meeting.fields['Owner Name'],
+        ownerEmail: meeting.fields['Owner Email'],
+        sessionId: meeting.fields['Session ID'],
+        summary: meeting.fields['Meeting Summary'],
+        topics: Array.isArray(meeting.fields.Topics)
+          ? meeting.fields.Topics.join(', ')
+          : (typeof meeting.fields.Topics === 'string' ? meeting.fields.Topics : ''),
+        keyQuestions: Array.isArray(meeting.fields['Key Questions'])
         ? meeting.fields['Key Questions'].join(', ')
         : (typeof meeting.fields['Key Questions'] === 'string' ? meeting.fields['Key Questions'] : ''),
-      actionItems: meeting.fields['Action Items'],
-      reportUrl: meeting.fields['Report URL'],
-      chapterSummaries: meeting.fields['Chapter Summaries'],
-      transcriptSpeakers: meeting.fields['Transcript Speakers'],
-      speakerBlocks: meeting.fields['Speaker Blocks'],
-    }))
+        actionItems: meeting.fields['Action Items'],
+        reportUrl: meeting.fields['Report URL'],
+        chapterSummaries: meeting.fields['Chapter Summaries'],
+        transcriptSpeakers: meeting.fields['Transcript Speakers'],
+        speakerBlocks: meeting.fields['Speaker Blocks'],
+      }
+    })
 
     // Cache the result
     await cacheSet(cacheKey, transformedMeetings, CACHE.TTL.MEDIUM)
@@ -161,8 +163,9 @@ router.get(
       toDate: tomorrow,
     })
 
-    const transformedMeetings = meetings.map((meeting) => ({
-      id: meeting.id,
+    const transformedMeetings = meetings.map((meeting) => {
+      return {
+        id: meeting.id,
       startTime: meeting.fields['Start Time'],
       title: meeting.fields.Title || meeting.fields.Name,
       participants: meeting.fields.Participants?.split(',').map((p) => p.trim()) || [],
@@ -173,7 +176,8 @@ router.get(
         ? meeting.fields.Topics.join(', ')
         : (typeof meeting.fields.Topics === 'string' ? meeting.fields.Topics : ''),
       reportUrl: meeting.fields['Report URL'],
-    }))
+    }
+    })
 
     res.json({
       success: true,

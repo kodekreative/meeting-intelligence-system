@@ -9,7 +9,7 @@ import { cacheGet, cacheSet, cacheDeletePattern } from '../utils/redis.js'
 import { CACHE } from '../shared/constants.js'
 import { updateActionItemSchema, upsertEmailPreferenceSchema } from '../shared/schemas.js'
 
-const router = Router()
+const router: Router = Router()
 
 /**
  * GET /api/v1/action-items

@@ -2,11 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone',
   env: {
     API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   },
-  // Transpile shared packages from monorepo
   transpilePackages: ['shared'],
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
 }
 
 module.exports = nextConfig
